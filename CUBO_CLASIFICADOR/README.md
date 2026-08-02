@@ -16,7 +16,7 @@ Construido con **Three.js r160** (render 3D) y **cannon-es 0.20** (físicas), to
 | Mover pieza agarrada | **Flechas** del teclado |
 | Soltar el mouse | **ESC** |
 
-El objetivo es llevar cada pieza al hueco que coincide con su forma. Cuando la pieza esta sobre su hueco correcto y la sueltas, el sistema de fisicas la deja caer naturalmente a traves del hueco — no hay snap posicional.
+El objetivo es llevar cada pieza al hueco que coincide con su forma. Al soltarla cerca de su hueco correcto, un **snap magnetico** la atrae y la alinea simetricamente si esta a menos de 0.85 unidades del centro del hueco y por encima de la tapa (altura `WALL_HEIGHT + 1.2`); luego el sistema de fisicas la deja caer naturalmente a traves del hueco.
 
 ---
 
@@ -25,9 +25,9 @@ El objetivo es llevar cada pieza al hueco que coincide con su forma. Cuando la p
 | Pieza | Geometria 3D | Forma del hueco | Color |
 |-------|-------------|-------------------|-------|
 | **Esfera** | `SphereGeometry` (r=0.55) | Circulo | Rojo |
-| **Cubo** | `BoxGeometry` (0.9) | Cuadrado | Azul |
-| **Triangulo** | `ExtrudeGeometry` (prisma triangular, r=0.65, depth=0.9) | Triangulo equilatero | Verde |
-| **Estrella** | `ExtrudeGeometry` (4 puntas, r=0.5) | Estrella 4 puntas | Cian |
+| **Cubo** | `BoxGeometry` (0.9) | Cuadrado | Celeste |
+| **Triangulo** | `ExtrudeGeometry` (prisma triangular, r=0.65, depth=0.9) | Triangulo equilatero | Verde menta |
+| **Rombo** | `ExtrudeGeometry` (rombo 1.0 x 0.7, depth=0.9) | Rombo | Amarillo |
 
 Cada pieza se genera con su propia geometria y color, definidos en `data/holeConfigs.js` (fuente unica de verdad).
 
@@ -86,7 +86,6 @@ CUBO_CLASIFICADOR/
     │
     ├── game/
     │   ├── ClassifierRules.js    # Logica: verifica si la pieza esta sobre su hueco
-    │   ├── HoleDetector.js       # Deteccion punto-en-hueco con tolerancia (circulo, cuadrado, triangulo, estrella)
     │   └── Timer.js              # Modulo desacoplado para gestion del temporizador del juego
     │
     ├── ui/
@@ -98,15 +97,15 @@ CUBO_CLASIFICADOR/
     ├── utils/                 # Funciones transversales
     │   ├── ResizeHandler.js      # Responsive: resize camara + renderer optimizado con requestAnimationFrame
     │   ├── CollisionHelper.js    # Helper centralizado para consultas AABB (intersectsAnyObstacle, isPointInsideBox)
+    │   ├── HoleDetector.js       # Deteccion punto-en-forma con tolerancia (circulo, cuadrado, triangulo, rombo)
     │   ├── math.js               # Utilidad de restriccion espacial (clampToBounds)
-    │   ├── geometry.js           # pointInTriangle, pointInPolygon, computeStarPoints (re-exporta SSOT)
+    │   ├── geometry.js           # pointInTriangle (punto dentro de un triangulo)
     │   └── holeShapes.js         # Generacion de Paths Three.js para los 4 tipos de hueco
     │
     └── data/                  # Configuracion centralizada
         ├── holeConfigs.js          # FUENTE UNICA: posicion, tamanio, color de cada hueco y pieza
         ├── classifierDimensions.js # Constantes: OUTER=4, WALL_HEIGHT=2.5, PANEL_DEPTH=0.5, etc.
-        ├── physicsConstants.js     # Constantes de fisica Cannon-es (restitution, friction, damping)
-        └── shapeVertices.js        # Single Source of Truth para construccion de vertices 2D/3D
+        └── physicsConstants.js     # Constantes de fisica Cannon-es (restitution, friction, damping)
 ```
 
 ---
@@ -131,7 +130,7 @@ CUBO_CLASIFICADOR/
 
 ### Panel perforado (fisica)
 
-El panel del clasificador construye una grilla estatica de cuerpos `CANNON.Box` compuestos que omiten las zonas con huecos mediante `isInsideAnyHole()`. Esto permite colisiones estables para todas las formas 3D (esfera, cubo, prisma triangular y estrella) sin las limitaciones de compatibilidad de `CANNON.Trimesh`.
+El panel del clasificador construye una grilla estatica de cuerpos `CANNON.Box` compuestos que omiten las zonas con huecos mediante `isInsideAnyHole()`. Esto permite colisiones estables para todas las formas 3D (esfera, cubo, prisma triangular y rombo) sin las limitaciones de compatibilidad de `CANNON.Trimesh`.
 
 ### Huecos visuales (ExtrudeGeometry)
 
@@ -145,7 +144,7 @@ Cada pieza mapea su `pieceType` a una forma cannon-es:
 - **sphere**: `CANNON.Sphere`
 - **box**: `CANNON.Box`
 - **triangle**: `CANNON.Cylinder(r, r, h, 3)` — prisma triangular
-- **star**: `CANNON.Cylinder(r, r, h, 8)` — aproximacion del concavo
+- **rhombus**: `CANNON.Box` reducido al 0.62 en X/Z para que pase holgadamente por el hueco
 
 ### Sistema de arrastre (DragManager)
 
@@ -198,7 +197,7 @@ Cada frame:
 - Filtro rapido: si `mesh.position.y < WALL_HEIGHT - 1.0`, retorna false (muy abajo)
 - Convierte posicion mundial a coordenadas del Shape (`sx = x`, `sy = -z`)
 - Usa `HoleDetector.isInsideHole()` con tolerancia 0.1 para compensar imprecision de camara FPS
-- En `onDragEnd` de DragManager, si la pieza esta sobre su hueco, muestra mensaje en consola
+- En `onDragEnd` de DragManager, si la pieza se suelta a menos de 0.85 unidades del centro de su hueco (y arriba de la tapa), se aplica un snap magnetico que la posiciona y reorienta simetricamente sobre el hueco
 
 ---
 

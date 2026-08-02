@@ -1,7 +1,7 @@
 import { Path } from 'three';
 
 /**
- * Crea un hueco circular (para Esfera y Cilindro).
+ * Crea un hueco circular (para la pieza Esfera).
  * @param {number} cx
  * @param {number} cy
  * @param {number} r
@@ -53,11 +53,6 @@ export function triangleHole(cx, cy, r) {
     path.closePath();
     return path;
 }
-
-/**
- * Crea un hueco en forma de estrella de N puntas.
- */
-
 
 /**
  * Crea un hueco en forma de rombo.
