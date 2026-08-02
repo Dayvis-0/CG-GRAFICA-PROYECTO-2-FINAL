@@ -664,7 +664,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 
 ---
 
-# FASE 7 — Seguridad
+# FASE 7 — Seguridad ✅ (completada)
 
 **Objetivo**: Endurecer el frente web: integridad de dependencias, política de contenido y eliminación de `innerHTML`.
 
@@ -691,6 +691,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Evaluar auto-hospedar `three` y `cannon-es` (versiones pines) o verificar el hash del bundle antes de importar. Documentar el tradeoff: hoy es aceptable para un proyecto educativo, pero no para producción.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 7
+- **Estado**: 📝 Decisión documentada (Opción B) — se mantiene el CDN (jsdelivr + fallback unpkg) y se acepta el riesgo supply-chain para un proyecto educativo sin despliegue productivo. Auto-hospedar (~1.5MB de bundles pineados) queda documentado como paso previo si el juego llega a producción.
 
 ### SEC-002 — Sin Content-Security-Policy (Observación)
 - **Categoría**: Seguridad (observación)
@@ -703,6 +704,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Mover el fallback a un archivo externo y aplicar CSP con `script-src 'self' https://cdn.jsdelivr.net https://unpkg.com`; evaluar en FASE 7 con prueba manual.
 - **Dependencias**: SEC-001 (decisión de entrega).
 - **Fase**: FASE 7
+- **Estado**: 📝 Evaluada y descartada — se intentó CSP vía meta con hash SHA-256 del import map inline, pero resultó frágil: el hash rompe con cualquier cambio del map y `frame-ancestors` no se permite vía meta (bloqueó la carga). Se mantiene el fallback en `fallback.js` externo (mejora real sin riesgo). Si se quiere CSP en producción, debe ir por cabecera HTTP del servidor, no por meta.
 
 ### SEC-003 — `innerHTML` con mensaje de error (reiteración de ERR-003)
 - **Categoría**: Seguridad
@@ -715,6 +717,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: `loadingPhase.textContent`.
 - **Dependencias**: ERR-003 (mismo cambio).
 - **Fase**: FASE 7
+- **Estado**: ✅ Resuelto — los 2 `innerHTML` restantes (hints de modo WASD/Mouse, strings estáticos en `setCameraMode`) migrados a `textContent`. `grep innerHTML` en `src/` e `index.html` = 0 (solo un comentario del fix ERR-003).
 
 ### SEC-004 — Sin datos sensibles ni persistencia (Observación)
 - **Categoría**: Seguridad (observación)
@@ -727,6 +730,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Ninguna acción; documentar.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 7
+- **Estado**: 📝 Observación confirmada — sin cambios necesarios.
 
 ---
 
@@ -884,7 +888,7 @@ Ordenado de menor a mayor riesgo para refactorizar con seguridad. **Regla de ver
 | FASE 4 | Consistencia de convenciones (create/setup, fricción, carpetas, CSS, números mágicos) | Bajo | Media | Ninguna |
 | FASE 5 | Código duplicado (quaternion triángulo, teleport, clamps, margen, audio) | Medio | Alta | FASE 4 (margen/constantes) |
 | FASE 6 | Rendimiento (AudioContext singleton, fuentes sin uso, documentación de límites) ✅ | Medio | Media | DUP-007 (para PERF-001) |
-| FASE 7 | Seguridad (SRI/CDN, CSP, textContent) | Medio | Media | SEC-001 → SEC-002 encadenadas |
+| FASE 7 | Seguridad (SRI/CDN, CSP, textContent) ✅ | Medio | Media | SEC-001 → SEC-002 encadenadas |
 | FASE 8 | SRP y modularización (extraer GameState, SoundController, SnapHelper, PanelGridBuilder) | Medio-Alto | Alta | FASE 5 (helpers extraídos) |
 | FASE 9 | Arquitectura y acoplamiento (interfaceCtrl, refs compartidas, reglas en game/) | Alto | Media | FASE 8 |
 

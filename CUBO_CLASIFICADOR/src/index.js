@@ -272,7 +272,8 @@ try {
             if (infantilBtn) infantilBtn.classList.remove('active');
             if (expertoBtn) expertoBtn.classList.add('active');
             if (hintEl) {
-                hintEl.innerHTML = 'Modo WASD: WASD para caminar · Clic en pantalla para capturar mouse · Arrastrá figuras';
+                // SEC-003: textContent (strings estáticos, sin interpolación)
+                hintEl.textContent = 'Modo WASD: WASD para caminar · Clic en pantalla para capturar mouse · Arrastrá figuras';
             }
         } else {
             // Desactivar FPS + activar órbita
@@ -285,7 +286,8 @@ try {
             if (infantilBtn) infantilBtn.classList.add('active');
             if (expertoBtn) expertoBtn.classList.remove('active');
             if (hintEl) {
-                hintEl.innerHTML = 'Modo Mouse: Arrastrá las figuras con el mouse o dedo · Mové la cámara arrastrando el fondo';
+                // SEC-003: textContent (strings estáticos, sin interpolación)
+                hintEl.textContent = 'Modo Mouse: Arrastrá las figuras con el mouse o dedo · Mové la cámara arrastrando el fondo';
             }
         }
     }
