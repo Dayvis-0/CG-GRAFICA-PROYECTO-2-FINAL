@@ -7,6 +7,11 @@ import { getHalfSize } from '../utils/geometry.js';
  * Maneja el arrastre de piezas con el mouse (modo kinematic en cannon-es).
  * Colisiones: clasificador via AABB, cuarto via clamp de límites.
  * Deslizamiento natural por eje (X → Z → Y).
+ *
+ * CONTRATO DE REFS COMPARTIDAS (ARQ-002):
+ * - `activeCameraRef` — `{ current: THREE.Camera }`. El compositor lo actualiza
+ *   según el modo de cámara activo; aquí SOLO se lee para raycasting.
+ *   El contrato implícito: "la cámara del raycaster SIEMPRE es la activa".
  */
 export function setupDragManager(activeCameraRef, renderer, {
     piecesGroup,

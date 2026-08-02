@@ -2,16 +2,19 @@
  * Cronómetro regresivo para el Cubo Clasificador.
  *
  * Responsabilidad ÚNICA: gestionar el estado, display y controles
- * del temporizador del juego.
+ * del temporizador del juego. La configuración (duración inicial,
+ * rango del botón "+") viene de `data/gameConfig.js` (ARQ-005).
  *
- * @returns {{ start: () => void, reset: () => void }}
+ * @returns {{ start: () => void, reset: () => void, stop: () => void }}
  */
+import { TIMER_CONFIG } from '../data/gameConfig.js';
+
 export function createTimer(onTimeUp) {
     const timerEl      = document.getElementById('timer');
     const timerDisplay = document.getElementById('timer-display');
 
-    let minutes  = 1;
-    let seconds  = 0;
+    let minutes  = TIMER_CONFIG.initialMinutes;
+    let seconds  = TIMER_CONFIG.initialSeconds;
     let running  = false;
     let interval = null;
     let started  = false;
@@ -52,8 +55,8 @@ export function createTimer(onTimeUp) {
         if (interval) clearInterval(interval);
         running = false;
         started = false;
-        minutes = 1;
-        seconds = 0;
+        minutes = TIMER_CONFIG.initialMinutes;
+        seconds = TIMER_CONFIG.initialSeconds;
         timerEl.classList.remove('running');
         timerDisplay.style.color = '';
         updateDisplay();
@@ -72,9 +75,13 @@ export function createTimer(onTimeUp) {
     };
     document.getElementById('timer-plus').onclick = () => {
         if (running || started) return;
-        if (minutes < 5) minutes++;
+        if (minutes < TIMER_CONFIG.maxMinutes) minutes++;
         updateDisplay();
     };
+
+    // Sincronizar el display con la config al arrancar (ARQ-005):
+    // el `01:00` del HTML es solo un placeholder sin autoridad.
+    updateDisplay();
 
     return { start, reset, stop };
 }

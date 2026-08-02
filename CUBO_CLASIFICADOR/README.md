@@ -111,7 +111,8 @@ CUBO_CLASIFICADOR/
     └── data/                  # Configuracion centralizada
         ├── holeConfigs.js          # FUENTE UNICA: posicion, tamanio, color de cada hueco y pieza
         ├── classifierDimensions.js # Constantes: OUTER=4, WALL_HEIGHT=2.5, PANEL_DEPTH=0.5 + snap (SNAP_*)
-        └── physicsConstants.js     # Constantes de fisica Cannon-es (restitution, friction, damping)
+        ├── physicsConstants.js     # Constantes de fisica Cannon-es (restitution, friction, damping)
+        └── gameConfig.js           # Config de juego: duracion del timer y rango (ARQ-005)
 ```
 
 ---

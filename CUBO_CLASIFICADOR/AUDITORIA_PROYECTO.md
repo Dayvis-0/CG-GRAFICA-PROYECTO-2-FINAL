@@ -801,13 +801,13 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 
 ---
 
-# FASE 9 — Arquitectura y acoplamiento
+# FASE 9 — Arquitectura y acoplamiento ✅ (completada)
 
 **Objetivo**: Reducir el acoplamiento temporal y los estados compartidos frágiles de la composición, y formalizar el contexto del juego.
 
 **Lista de tareas**: ARQ-001 … ARQ-005
 
-**Archivos afectados**: `src/index.js`, `src/controls/DragManager.js`, `src/controls/CameraFPS.js`, `src/animations/AnimationLoop.js`, `src/game/Timer.js`
+**Archivos afectados**: `src/index.js`, `src/controls/DragManager.js`, `src/controls/CameraFPS.js`, `src/animations/AnimationLoop.js`, `src/game/Timer.js`, `src/game/GameState.js`, `src/data/gameConfig.js`
 
 **Justificación**: Es la fase de mayor riesgo porque toca el cableado completo; por eso va al final, sobre un código ya modularizado y estable.
 
@@ -815,67 +815,73 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 
 **Prioridad**: Media
 
+**Resumen**: FASE 9 completa (5/5). La política de infracción se movió a `game/` (ARQ-004), `interfaceCtrl` dejó de ser una variable tardía (ARQ-001), el contrato de las refs compartidas quedó documentado en las cabeceras JSDoc (ARQ-002), y la config del timer se centralizó en `data/gameConfig.js` (ARQ-005). ARQ-003 queda documentado como observación aceptada. Con esto el plan de 9 fases queda cerrado.
+
 ---
 
 ### ARQ-001 — Acoplamiento temporal: `interfaceCtrl` usado antes de asignarse
 - **Categoría**: Arquitectura / Acoplamiento
 - **Prioridad**: Media
-- **Archivos**: `src/index.js` (L198, L238, L343, L403)
-- **Descripción**: `tryClassify` y `resetPieces` referencian `interfaceCtrl`, declarada con `let` en L343, mucho después de su primer uso potencial (L198) y solo asignada en L403. Funciona porque esos callbacks se ejecutan post-inicialización, pero es una bomba de tiempo: cualquier llamada temprana (o reordenamiento) lanza `Cannot access 'interfaceCtrl' before initialization`.
-- **Evidencia**: `index.js` L343 `let interfaceCtrl;` vs L198 `interfaceCtrl.onPieceClassified(...)` y L238 `interfaceCtrl.resetScores()`.
+- **Archivos**: `src/index.js`
+- **Descripción**: `tryClassify` y `resetPieces` referenciaban `interfaceCtrl`, declarada con `let` mucho después de su primer uso potencial; era una bomba de tiempo: cualquier llamada temprana lanzaba `Cannot access 'interfaceCtrl' before initialization`.
+- **Evidencia**: Originalmente `let interfaceCtrl;` declarada tras los callbacks que la usaban.
 - **Motivo**: Orden frágil de inicialización; el compilador no protege (JS no tiene análisis estático de esto).
-- **Riesgos de modificar**: Medio: la solución (inyectar callbacks en lugar de capturar variables externas) toca el wiring.
-- **Recomendación**: Pasar los callbacks de UI como parámetros a los módulos (GameState recibe `{ onClassified, onReset }`), eliminando la dependencia de variables tardías.
-- **Dependencias**: SRP-001 (la extracción de GameState resuelve esto naturalmente).
+- **Riesgos de modificar**: Medio: la solución toca el wiring.
+- **Recomendación**: Pasar los callbacks de UI como parámetros a los módulos, eliminando la dependencia de variables tardías.
 - **Fase**: FASE 9
+- **Estado**: ✅ Resuelto — `setupInterface` (solo depende de `pieces`, `buildMaterial`, `lights`) ahora se crea ANTES de `createGameState` y `setupDragManager`. `interfaceCtrl` es `const` desde el inicio y los callbacks la usan sin guards `if (interfaceCtrl)`.
 
 ### ARQ-002 — Refs compartidas mutables `{ current }` como acoplamiento implícito
 - **Categoría**: Arquitectura / Acoplamiento
 - **Prioridad**: Media
-- **Archivos**: `src/index.js` (L76–77), `src/controls/CameraFPS.js` (L33, L41), `src/controls/DragManager.js` (L178, L206), `src/animations/AnimationLoop.js`
-- **Descripción**: `draggingRef` y `activeCameraRef` (`{ current }`) se comparten por identidad de objeto entre DragManager, CameraFPS y AnimationLoop. Es un patrón válido (evita recrear listeners), pero crea acoplamiento invisible: cambiar la propiedad `current` en cualquier lugar afecta a todos.
-- **Evidencia**: `index.js` L76–77; `CameraFPS.js` L33, L41; `DragManager.js` L178, L206, L207.
+- **Archivos**: `src/index.js`, `src/controls/CameraFPS.js`, `src/controls/DragManager.js`, `src/animations/AnimationLoop.js`
+- **Descripción**: `draggingRef` y `activeCameraRef` (`{ current }`) se comparten por identidad de objeto entre DragManager, CameraFPS y AnimationLoop. Patrón válido (evita recrear listeners), pero crea acoplamiento invisible.
+- **Evidencia**: `index.js` L79–80; `CameraFPS.js` L36, L44; `DragManager.js` L180, L206; `AnimationLoop.js` L102.
 - **Motivo**: Sin documentación, el contrato implícito ("si estás arrastrando, la cámara no responde") es difícil de rastrear.
-- **Riesgos de modificar**: Medio: reemplazar por un `GameContext` o callbacks de estado requiere tocar 3 módulos.
-- **Recomendación**: Agrupar en un único objeto `context = { dragging: false, camera: null }` documentado, o exponer eventos (`onDragStateChange`); mínimo: documentar el contrato en las cabeceras JSDoc.
+- **Riesgos de modificar**: Medio.
+- **Recomendación**: Agrupar en un único objeto `context` documentado, o exponer eventos; mínimo: documentar el contrato en las cabeceras JSDoc.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 9
+- **Estado**: ✅ Resuelto (documentación) — contrato de cada ref documentado en las cabeceras JSDoc de `DragManager.js` (quién escribe/lee `activeCameraRef`), `CameraFPS.js` (quién escribe/lee `draggingRef` y su semántica de prioridad del arrastre) y `AnimationLoop.js` (misma cámara para render y raycast). Se optó por documentar en vez de agrupar en contexto: menos cambios, mismo contrato explícito.
 
 ### ARQ-003 — DI manual con demasiados parámetros en `setupDragManager` (Observación)
 - **Categoría**: Arquitectura (observación)
 - **Prioridad**: Baja
-- **Archivos**: `src/controls/DragManager.js` (L10–20), `src/index.js` (L344–400)
+- **Archivos**: `src/controls/DragManager.js`, `src/index.js`
 - **Descripción**: `setupDragManager` recibe 9+ parámetros y 4 callbacks. Funciona, pero el límite de legibilidad está cerca.
-- **Evidencia**: Firma de `setupDragManager` L10–20 + objeto de opciones en `index.js` L344–400 (~56 líneas de configuración).
+- **Evidencia**: Firma de `setupDragManager` + objeto de opciones en `index.js`.
 - **Motivo**: Si se agregan más opciones, conviene agrupar en un objeto de contexto (ver ARQ-002).
 - **Riesgos de modificar**: Bajo; solo reorganización de firma.
 - **Recomendación**: A futuro, pasar un único objeto `deps` con las dependencias; no urgente.
 - **Dependencias**: ARQ-002.
 - **Fase**: FASE 9
+- **Estado**: 📝 Aceptado como observación — el dragManager ya recibe un objeto de opciones; agrupar dependencias en un `deps` adicional no aporta valor real para un proyecto de este tamaño.
 
 ### ARQ-004 — Reglas de juego parcialmente fuera de `game/` (Observación)
 - **Categoría**: Arquitectura (observación)
 - **Prioridad**: Baja
-- **Archivos**: `src/index.js` (L362–398, L421–462), `src/game/ClassifierRules.js`
-- **Descripción**: `ClassifierRules` vive en `game/`, pero el snap (cuándo atraer y a qué altura) y la política de expulsión por infracción están implementadas en `index.js`, fuera de la capa de reglas.
-- **Evidencia**: Snap en `index.js` L363–396; expulsión en L444–457; `ClassifierRules.js` solo tiene `isOverOwnHole`.
-- **Motivo**: La "fuente única de reglas" declarada no contiene todas las reglas.
-- **Riesgos de modificar**: Medio; mover la lógica del snap/expulsión a `game/` es parte natural de SRP-001.
+- **Archivos**: `src/game/GameState.js`, `src/index.js`, `src/game/ClassifierRules.js`
+- **Descripción**: `ClassifierRules` vive en `game/`, pero la política de expulsión por infracción estaba implementada en `index.js`, fuera de la capa de reglas.
+- **Evidencia**: `GameState.js` `processPiece()`; `index.js` `onPostPhysics`.
+- **Motivo**: La "fuente única de reglas" declarada no contenía todas las reglas.
+- **Riesgos de modificar**: Medio.
 - **Recomendación**: Migrar snap y expulsión a `game/` junto con GameState (FASE 8).
 - **Dependencias**: SRP-001.
 - **Fase**: FASE 9
+- **Estado**: ✅ Resuelto — `GameState.processPiece(child)` encapsula la política completa de infracción (detección + expulsión vía `expelPiece`, importa `WALL_HEIGHT`/`OUTER` de `data/classifierDimensions.js`) y devuelve `'classified' | 'infraction' | 'none'`. `index.js` `onPostPhysics` quedó reducido a reaccionar al resultado (sonido + log). Nota: el snap posicional sigue en `game/SnapHelper.js` (extraído en FASE 8).
 
 ### ARQ-005 — Config de juego (tiempo límite) hardcodeada en dos lugares (Observación)
 - **Categoría**: Arquitectura (observación)
 - **Prioridad**: Baja
-- **Archivos**: `src/game/Timer.js` (L13–14, L55–56, L69–75), `index.html` (L87)
-- **Descripción**: La duración inicial (1:00), el rango (1–5 min) y el display inicial `01:00` están duplicados entre `Timer.js` y el HTML; no hay config central.
-- **Evidencia**: `Timer.js` L13–14 (`minutes=1`, `seconds=0`), L55–56 (reset), L69–77 (rango 1–5); `index.html` L87 (`01:00`).
-- **Motivo**: Cambiar la duración requiere editar JS + HTML coordinadamente.
-- **Riesgos de modificar**: Bajo; `Timer.js` ya recibe `onTimeUp`; podría recibir `{ initialMinutes, maxMinutes }`.
+- **Archivos**: `src/data/gameConfig.js`, `src/game/Timer.js`, `index.html`
+- **Descripción**: La duración inicial (1:00), el rango (1–5 min) y el display inicial `01:00` estaban duplicados entre `Timer.js` y el HTML; no había config central.
+- **Evidencia**: Originalmente `Timer.js` L13–14 (`minutes=1`, `seconds=0`), L55–56 (reset), L69–77 (rango 1–5); `index.html` L87 (`01:00`).
+- **Motivo**: Cambiar la duración requería editar JS + HTML coordinadamente.
+- **Riesgos de modificar**: Bajo.
 - **Recomendación**: Parametrizar `createTimer` con la configuración y dejar el HTML leyendo el estado inicial del módulo.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 9
+- **Estado**: ✅ Resuelto — nuevo `src/data/gameConfig.js` exporta `TIMER_CONFIG` (`initialMinutes: 1`, `initialSeconds: 0`, `maxMinutes: 5`); `Timer.js` lo consume en init, reset y rango de botones, y sincroniza el display al arrancar (el `01:00` del HTML quedó como placeholder sin autoridad).
 
 ---
 
@@ -893,7 +899,7 @@ Ordenado de menor a mayor riesgo para refactorizar con seguridad. **Regla de ver
 | FASE 6 | Rendimiento (AudioContext singleton, fuentes sin uso, documentación de límites) ✅ | Medio | Media | DUP-007 (para PERF-001) |
 | FASE 7 | Seguridad (SRI/CDN, CSP, textContent) ✅ | Medio | Media | SEC-001 → SEC-002 encadenadas |
 | FASE 8 | SRP y modularización (extraer GameState, SoundController, SnapHelper, PanelGridBuilder) ✅ | Medio-Alto | Alta | FASE 5 (helpers extraídos) |
-| FASE 9 | Arquitectura y acoplamiento (interfaceCtrl, refs compartidas, reglas en game/) | Alto | Media | FASE 8 |
+| FASE 9 | Arquitectura y acoplamiento (interfaceCtrl, refs compartidas, reglas en game/) ✅ | Alto | Media | FASE 8 |
 
 ---
 
@@ -915,3 +921,29 @@ Ordenado de menor a mayor riesgo para refactorizar con seguridad. **Regla de ver
 | ARQ-001 … ARQ-005 | Arquitectura / Acoplamiento | Media/Baja | 9 |
 
 **Nota sobre observaciones**: Los ítems marcados como "Observación" (DEAD-008, DEAD-010, CON-006, DUP-009, PERF-002, PERF-003, PERF-005, PERF-006, SEC-002, SEC-004, SRP-003, ARQ-003, ARQ-004, ARQ-005) no son defectos confirmados: son decisiones de diseño legítimas o costos aceptables. Se documentan para que cada fase decida conscientemente si intervenirlos o no.
+
+---
+
+## CIERRE DEL PLAN
+
+Con la FASE 9 completada, el plan de refactor de 9 fases queda **cerrado** (9/9).
+
+**Resumen de resolución por categoría**:
+- **ERR (bugs)**: 4/4 resueltos (ERR-001 victoria, ERR-002 guard WebGL, ERR-003/005 innerHTML y cooldown de sonido).
+- **DOC**: 5/5 alineados (README + JSDoc).
+- **DEAD**: 10/10 eliminados o documentados como observaciones aceptadas.
+- **CON**: 6/6 consistentes (fábricas, fricción, carpetas, CSS, números mágicos, JSDoc).
+- **DUP**: 9/9 resueltos (helpers compartidos, quaternion del triángulo, clamp, margen, audio).
+- **PERF**: 6/6 (AudioContext singleton, blur desktop-only, resto documentado como límites aceptados).
+- **SEC**: 4/4 (textContent total, decisión CDN documentada, CSP descartada por fragilidad — ver FASE 7, sin datos sensibles).
+- **SRP**: 3/3 (GameState, SnapHelper, pieceUtils, PanelGridBuilder; Interface.js pospuesto como observación).
+- **ARQ**: 5/5 (interfaceCtrl sin acoplamiento temporal, refs documentadas, DI manual aceptado, reglas en `game/`, config centralizada).
+
+**Criterios de validación final** (verificar en navegador antes de entregar):
+1. Arranca sin errores en consola.
+2. Las 4 piezas caen por sus huecos.
+3. Snap magnético funciona.
+4. Victoria/derrota y reinicio funcionan.
+5. Modo WASD y modo Mouse funcionan.
+
+**Resultado estructural**: `index.js` pasó de ~470 líneas god-module a ~355 líneas de composición pura; la lógica vive en módulos por responsabilidad (`game/`, `controls/`, `physics/`, `ui/`, `utils/`, `data/`, `animations/`). El proyecto quedó con fuente única de verdad para constantes (`data/`) y configuración (`data/gameConfig.js`).

@@ -79,6 +79,16 @@ try {
     const draggingRef = { current: false };
     const activeCameraRef = { current: cam };
 
+    // ─── UI (ARQ-001: se crea antes de los callbacks que la usan) ───────
+    // setupInterface solo depende de piezas/materiales/luces, ya disponibles;
+    // crearla aquí elimina la variable tardía `interfaceCtrl` que los
+    // callbacks de gameState/drag referenciaban antes de asignarse.
+    const interfaceCtrl = setupInterface({
+        piecesGroup: pieces,
+        buildMaterial,
+        lights,
+    });
+
     // ─── Cronómetro ────────────────────────────────────────────────────
     let gameState;
     const timer = createTimer(() => gameState.showGameOver(false));
@@ -179,7 +189,6 @@ try {
     // ─── Estado del juego (SRP-001) ────────────────────────────────────
     // Ref mutable para la dependencia circular gameState ↔ dragManager (ARQ-002)
     const dragManagerRef = { current: null };
-    let interfaceCtrl;
     gameState = createGameState({
         pieces,
         rules,
@@ -187,11 +196,11 @@ try {
         dragManagerRef,
         setControlsState,
         onClassified: (label) => {
-            if (interfaceCtrl) interfaceCtrl.onPieceClassified(label);
+            interfaceCtrl.onPieceClassified(label);
             console.log(`✅ ¡${label} clasificado!`);
         },
         onResetScores: () => {
-            if (interfaceCtrl) interfaceCtrl.resetScores();
+            interfaceCtrl.resetScores();
         },
         onGameOver: (won) => {
             const overlay = document.getElementById('game-over-overlay');
@@ -227,7 +236,7 @@ try {
         classifierTop: WALL_HEIGHT + PANEL_DEPTH,
         classifierHalf: OUTER / 2,
         onSelect: (mesh) => {
-            if (interfaceCtrl) interfaceCtrl.onPieceSelected(mesh);
+            interfaceCtrl.onPieceSelected(mesh);
         },
         onDragStart: () => {
             draggingRef.current = true;
@@ -245,13 +254,7 @@ try {
     // Completar la referencia circular del estado de juego (ARQ-002)
     dragManagerRef.current = dragManager;
 
-    // ─── UI + Responsive + Bucle principal ─────────────────────────────
-    interfaceCtrl = setupInterface({
-        piecesGroup: pieces,
-        buildMaterial,
-        lights,
-    });
-
+    // ─── Responsive + Bucle principal ───────────────────────────────────
     setupResize(cam, renderer);
 
     setupAnimationLoop({
@@ -275,26 +278,11 @@ try {
         roomBounds: room.userData.bounds,
         onPostPhysics: () => {
             for (const child of pieces.children) {
-                if (!child.isMesh) continue;
-                const label = child.userData.label;
-
-                // Si ya fue correctamente clasificada, no hacemos nada
-                if (gameState.isClassified(label)) continue;
-
-                // Para evitar falsos positivos con piezas que están afuera en el suelo,
-                // solo verificamos infracciones si la pieza está físicamente dentro del perímetro X/Z del clasificador.
-                const halfOuter = OUTER / 2;
-                const isInsideClassifierXZ = Math.abs(child.position.x) < halfOuter && Math.abs(child.position.z) < halfOuter;
-
-                // Si la pieza pasó por debajo del panel superior Y está dentro de la caja
-                if (isInsideClassifierXZ && child.position.y < WALL_HEIGHT - 0.2) {
-                    // Guard canónico en tryClassify (DUP-009): si no clasifica, es infracción
-                    if (!gameState.tryClassify(child)) {
-                        // ¡ERROR! Entró en un hueco incorrecto (porque físicamente cabía).
-                        playErrorSound();
-                        gameState.expelPiece(child);
-                        console.log(`❌ ¡Infracción! ${label} entró por un hueco equivocado y fue expulsada.`);
-                    }
+                // Política de clasificación/infracción en game/ (ARQ-004);
+                // el compositor solo reacciona al resultado.
+                if (gameState.processPiece(child) === 'infraction') {
+                    playErrorSound();
+                    console.log(`❌ ¡Infracción! ${child.userData.label} entró por un hueco equivocado y fue expulsada.`);
                 }
             }
         },

@@ -1,4 +1,5 @@
 import { HOLE_CONFIGS } from '../data/holeConfigs.js';
+import { WALL_HEIGHT, OUTER } from '../data/classifierDimensions.js';
 import { playSuccessSound } from '../utils/audio.js';
 
 /**
@@ -63,6 +64,35 @@ export function createGameState({
         if (orig) teleportPiece(mesh, orig);
     }
 
+    /**
+     * Política de infracción del loop de post-física (ARQ-004): si la pieza
+     * pasó por debajo del panel superior dentro del perímetro del clasificador,
+     * intenta clasificarla; si no clasifica, la expulsa a su origen.
+     * @param {THREE.Mesh} child
+     * @returns {'classified'|'infraction'|'none'}
+     */
+    function processPiece(child) {
+        if (!child.isMesh) return 'none';
+        if (classifiedLabels.has(child.userData.label)) return 'none';
+
+        // Solo verificamos infracciones si la pieza está físicamente dentro
+        // del perímetro X/Z del clasificador (evita falsos positivos con
+        // piezas que están afuera en el suelo).
+        const halfOuter = OUTER / 2;
+        const isInsideClassifierXZ = Math.abs(child.position.x) < halfOuter && Math.abs(child.position.z) < halfOuter;
+
+        // Si la pieza pasó por debajo del panel superior Y está dentro de la caja
+        if (isInsideClassifierXZ && child.position.y < WALL_HEIGHT - 0.2) {
+            // Guard canónico en tryClassify (DUP-009): si no clasifica, es infracción
+            if (!tryClassify(child)) {
+                expelPiece(child);
+                return 'infraction';
+            }
+            return 'classified';
+        }
+        return 'none';
+    }
+
     function showGameOver(won) {
         if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
         gameActive = false;
@@ -91,6 +121,7 @@ export function createGameState({
     return {
         tryClassify,
         expelPiece,
+        processPiece,
         resetPieces,
         showGameOver,
         isClassified: (label) => classifiedLabels.has(label),

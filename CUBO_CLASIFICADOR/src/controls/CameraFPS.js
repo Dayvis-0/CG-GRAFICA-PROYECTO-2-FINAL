@@ -12,7 +12,10 @@ import { clampToBounds } from '../utils/math.js';
  * @param {THREE.WebGLRenderer} renderer
  * @param {object} roomBounds        — { half: number, height: number, margin: number }
  * @param {THREE.Mesh[]} obstacles   — meshes con los que colisionar
- * @param {{ current: boolean }} draggingRef — ref compartida con DragManager
+ * @param {{ current: boolean }} draggingRef — ref compartida con DragManager.
+ *   CONTRATO (ARQ-002): `true` mientras se arrastra una pieza → la cámara
+ *   FPS no responde al mouse look ni al WASD (el arrastre tiene prioridad).
+ *   La escribe DragManager, la lee este módulo.
  * @param {object} inputManager      — { isDown(key), isPointerLocked() }
  */
 export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], draggingRef = { current: false }, inputManager) {

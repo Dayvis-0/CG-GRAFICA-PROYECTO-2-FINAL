@@ -6,6 +6,11 @@ import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 /**
  * Bucle de renderizado principal: FPS, físicas, clamp de seguridad, input y render.
  *
+ * CONTRATO DE REF COMPARTIDA (ARQ-002): `activeCameraRef` — `{ current: THREE.Camera }`.
+ * La escribe el compositor según el modo de cámara; este módulo la lee una vez
+ * por frame para renderizar. Implica: el render y el raycast del drag SIEMPRE
+ * usan la misma cámara activa.
+ *
  * @param {object} opts
  * @param {THREE.Scene}           opts.scene
  * @param {THREE.WebGLRenderer}   opts.renderer
