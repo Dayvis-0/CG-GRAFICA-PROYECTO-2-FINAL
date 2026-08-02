@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Juego interactivo 3D de clasificación de figuras geométricas con Three.js y Cannon-es">
+<title>Cubo Clasificador 3D</title>
+
+<!-- Google Fonts para diseño infantil -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- Estilos -->
+<link rel="stylesheet" href="style.css">
+
+<!-- Importmap Three.js -- con CDN de alta velocidad (jsdelivr) -->
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+        "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+    }
+}
+</script>
+<!-- Fallback: si el CDN principal falla, reintenta con unpkg -->
+<script>
+(async function() {
+    try {
+        await import('three');
+    } catch {
+        console.warn('[Fallback] CDN principal (jsdelivr) falló, usando unpkg');
+        const im = document.querySelector('script[type="importmap"]');
+        const map = JSON.parse(im.textContent);
+        map.imports.three = 'https://unpkg.com/three@0.160.0/build/three.module.js';
+        map.imports['three/addons/'] = 'https://unpkg.com/three@0.160.0/examples/jsm/';
+        map.imports['cannon-es'] = 'https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js';
+        im.textContent = JSON.stringify(map);
+        document.dispatchEvent(new CustomEvent('cdn-fallback'));
+    }
+})();
+</script>
+</head>
+<body>
+
+<!-- Loading overlay con estética oscura y básica -->
+<div id="loading-overlay">
+  <!-- Fase 1: cargando -->
+  <div id="loading-phase">
+    <div class="loader"></div>
+    <div class="loading-text">Cargando aplicación 3D...</div>
+    <div class="loading-sub">Descargando recursos</div>
+  </div>
+  <!-- Fase 2: nombre de usuario -->
+  <div id="username-phase" class="hidden">
+    <div class="loading-text">INGRESÁ TU NOMBRE</div>
+    <div class="loading-sub">Nombre de usuario para el registro del juego</div>
+    <form id="username-form">
+      <input type="text" id="username-input" placeholder="Tu nombre..." maxlength="20" autocomplete="off">
+      <button type="submit" id="username-btn">JUGAR</button>
+    </form>
+  </div>
+</div>
+
+<!-- Overlay de Fin de Juego (Estilo oscuro) -->
+<div id="game-over-overlay" class="hidden">
+  <div class="game-over-card glass-panel">
+    <h2 id="game-over-title">TIEMPO AGOTADO</h2>
+    <p id="game-over-message">Podés volver a intentarlo</p>
+    <button id="game-over-btn">REINTENTAR 🔄</button>
+  </div>
+</div>
+
+<!-- Botón superior derecho para alternar ajustes (estilo básico oscuro) -->
+<button id="panel-toggle-btn" class="ui-round-btn" title="Ajustes y Controles">⚙️</button>
+
+<!-- HUD (Puntaje) -->
+<div id="hud" class="glass-panel">
+  <h1 id="hud-title">■ CUBO CLASIFICADOR</h1>
+  <div id="hud-scores"></div>
+</div>
+
+<!-- Cronómetro -->
+<div id="timer" class="glass-panel">
+  <button class="timer-btn" id="timer-minus">−</button>
+  <span id="timer-display">01:00</span>
+  <button class="timer-btn" id="timer-plus">+</button>
+</div>
+
+<!-- Panel de control (ahora ocultable por defecto) -->
+<div id="panel" class="glass-panel">
+  <h2>⚙ AJUSTES</h2>
+
+  <h3>Modo de cámara</h3>
+  <div>
+    <button type="button" class="btn cambtn active" id="cam-infantil-btn">Mouse</button>
+    <button type="button" class="btn cambtn" id="cam-experto-btn">WASD</button>
+  </div>
+
+  <h3>Seleccionar pieza</h3>
+  <div id="obj-buttons"></div>
+
+  <h3>Material</h3>
+  <button type="button" class="btn matbtn" data-mat="lambert">Lambert (mate, sin brillo)</button>
+  <button type="button" class="btn matbtn" data-mat="phong">Phong (brillo especular)</button>
+  <button type="button" class="btn matbtn" data-mat="standard">Standard (PBR realista)</button>
+
+  <h3>Textura procedural</h3>
+  <div>
+    <button type="button" class="btn texbtn" data-tex="none">Ninguna</button>
+    <button type="button" class="btn texbtn" data-tex="stripes">Rayas</button>
+    <button type="button" class="btn texbtn" data-tex="dots">Lunares</button>
+    <button type="button" class="btn texbtn" data-tex="gradient">Degradado</button>
+    <button type="button" class="btn texbtn" data-tex="wood">Madera</button>
+  </div>
+
+  <h3>Wireframe</h3>
+  <button type="button" class="btn wfbtn" id="wf-btn">Wireframe: OFF</button>
+
+  <h3>Acciones</h3>
+  <button type="button" class="btn" id="reset-btn">🔄 REINICIAR PIEZAS</button>
+
+  <h3>Luces (3)</h3>
+  <div class="lightrow">Direccional <div class="lighttoggle on" data-light="dir"><div class="dot"></div></div></div>
+  <div class="lightrow">Techo <div class="lighttoggle on" data-light="ceiling"><div class="dot"></div></div></div>
+  <div class="lightrow">Ambiental <div class="lighttoggle on" data-light="ambient"><div class="dot"></div></div></div>
+</div>
+
+<div id="hint">Modo Mouse: Arrastrá las figuras con el mouse o dedo · Mové la cámara arrastrando el fondo</div>
+
+<!-- Entry point modular -->
+<script type="module" src="src/index.js"></script>
+</body>
+</html>
