@@ -568,13 +568,13 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 
 ---
 
-# FASE 6 — Rendimiento
+# FASE 6 — Rendimiento ✅ (completada)
 
 **Objetivo**: Eliminar los costos reales medibles (creación de AudioContext, descarga de fuentes) y documentar los límites del enfoque actual. Sin micro-optimizaciones innecesarias.
 
 **Lista de tareas**: PERF-001 … PERF-006
 
-**Archivos afectados**: `src/index.js`, `index.html`, `src/physics/PhysicsSystem.js`
+**Archivos afectados**: `src/index.js`, `index.html`, `src/physics/PhysicsSystem.js`, `style.css`
 
 **Justificación**: El proyecto ya es eficiente; los hallazgos son puntuales. El único de impacto real es PERF-001 (contexto de audio nuevo por sonido).
 
@@ -595,6 +595,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Módulo de audio compartido (ver DUP-007) con `getContext()` singleton y `ctx.resume()` tras interacción del usuario (requisito de autoplay).
 - **Dependencias**: DUP-007.
 - **Fase**: FASE 6
+- **Estado**: ✅ Resuelto (DUP-007) — `src/utils/audio.js` con `getContext()` lazy singleton + `resume()` si `suspended`.
 
 ### PERF-002 — `backdrop-filter: blur()` en paneles (Observación)
 - **Categoría**: Rendimiento (observación)
@@ -607,6 +608,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Evaluar `backdrop-filter` solo en desktop o reducir el radio de blur.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 6
+- **Estado**: ✅ Resuelto — blur solo en desktop vía `@media (hover: hover) and (pointer: fine)` (`style.css`); los fondos semi-opacos ya garantizan legibilidad en móvil.
 
 ### PERF-003 — Broadphase Naive + panel compuesto ~200 shapes (Observación)
 - **Categoría**: Rendimiento (observación)
@@ -619,6 +621,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Documentar el tradeoff y, si se agregan más clasificadores, evaluar `SAPBroadphase` o reducir celdas.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 6
+- **Estado**: 📝 Observación documentada — aceptado como límite; con 4 piezas el costo es despreciable.
 
 ### PERF-004 — Carga de Google Fonts sin uso (ver DEAD-005)
 - **Categoría**: Rendimiento
@@ -631,6 +634,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Eliminar o aplicar (misma resolución que DEAD-005).
 - **Dependencias**: DEAD-005.
 - **Fase**: FASE 6
+- **Estado**: ✅ Resuelto (DEAD-005) — Google Fonts Quicksand eliminado de `index.html`.
 
 ### PERF-005 — `setKinematicPosition` despierta todas las piezas en cada movimiento (Observación)
 - **Categoría**: Rendimiento (observación)
@@ -643,6 +647,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Documentar; optimizar solo si se agregan más piezas.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 6
+- **Estado**: 📝 Observación documentada — O(4) por pointermove, trivial hoy.
 
 ### PERF-006 — `HOLE_CONFIGS.find` por pieza por frame en `onPostPhysics` (Observación)
 - **Categoría**: Rendimiento (observación)
@@ -655,6 +660,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Cachear el config por label (Map) si se agregan más piezas.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 6
+- **Estado**: 📝 Observación documentada — micro-coste O(4) por frame, aceptado.
 
 ---
 
@@ -877,7 +883,7 @@ Ordenado de menor a mayor riesgo para refactorizar con seguridad. **Regla de ver
 | FASE 3 | Código muerto (constantes, ramas, parámetros, fuentes, assets) | Bajo | Media | CON-002 (para DEAD-001) |
 | FASE 4 | Consistencia de convenciones (create/setup, fricción, carpetas, CSS, números mágicos) | Bajo | Media | Ninguna |
 | FASE 5 | Código duplicado (quaternion triángulo, teleport, clamps, margen, audio) | Medio | Alta | FASE 4 (margen/constantes) |
-| FASE 6 | Rendimiento (AudioContext singleton, fuentes sin uso, documentación de límites) | Medio | Media | DUP-007 (para PERF-001) |
+| FASE 6 | Rendimiento (AudioContext singleton, fuentes sin uso, documentación de límites) ✅ | Medio | Media | DUP-007 (para PERF-001) |
 | FASE 7 | Seguridad (SRI/CDN, CSP, textContent) | Medio | Media | SEC-001 → SEC-002 encadenadas |
 | FASE 8 | SRP y modularización (extraer GameState, SoundController, SnapHelper, PanelGridBuilder) | Medio-Alto | Alta | FASE 5 (helpers extraídos) |
 | FASE 9 | Arquitectura y acoplamiento (interfaceCtrl, refs compartidas, reglas en game/) | Alto | Media | FASE 8 |
