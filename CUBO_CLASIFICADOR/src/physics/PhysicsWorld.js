@@ -1,4 +1,5 @@
 import * as CANNON from 'cannon-es';
+import { PHYSICS_CONSTANTS } from '../data/physicsConstants.js';
 
 /**
  * Mundo de físicas cannon-es.
@@ -35,26 +36,26 @@ export function createPhysicsWorld() {
 
     // Pieza vs pieza: fricción media, rebote bajo
     world.addContactMaterial(new CANNON.ContactMaterial(materials.piece, materials.piece, {
-        friction: 0.45,
-        restitution: 0.05,
+        friction: PHYSICS_CONSTANTS.PIECE_FRICTION,
+        restitution: PHYSICS_CONSTANTS.DEFAULT_RESTITUTION,
     }));
 
     // Pieza vs pared: fricción alta (que no resbale)
     world.addContactMaterial(new CANNON.ContactMaterial(materials.piece, materials.wall, {
-        friction: 0.6,
-        restitution: 0.02,
+        friction: PHYSICS_CONSTANTS.WALL_FRICTION,
+        restitution: PHYSICS_CONSTANTS.LOW_RESTITUTION,
     }));
 
     // Pieza vs panel perforado: fricción media
     world.addContactMaterial(new CANNON.ContactMaterial(materials.piece, materials.panel, {
-        friction: 0.45,
-        restitution: 0.02,
+        friction: PHYSICS_CONSTANTS.PIECE_FRICTION,
+        restitution: PHYSICS_CONSTANTS.LOW_RESTITUTION,
     }));
 
     // Pieza vs piso del cuarto: media/alta
     world.addContactMaterial(new CANNON.ContactMaterial(materials.piece, materials.ground, {
-        friction: 0.7,
-        restitution: 0.02,
+        friction: PHYSICS_CONSTANTS.GROUND_FRICTION,
+        restitution: PHYSICS_CONSTANTS.LOW_RESTITUTION,
     }));
 
     /** Avanza la simulación. El dt se capa a 1/30 en AnimationLoop para evitar espiral de muerte. */

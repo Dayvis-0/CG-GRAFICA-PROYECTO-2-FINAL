@@ -19,7 +19,7 @@ const CODE_TO_KEY = {
     KeyW: 'w', KeyA: 'a', KeyS: 's', KeyD: 'd',
 };
 
-export function createInputManager() {
+export function setupInputManager() {
     /** @type {Record<string, boolean>} */
     const keys = {};
     let locked = false;

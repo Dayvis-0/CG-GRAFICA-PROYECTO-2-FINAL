@@ -104,9 +104,18 @@ CUBO_CLASIFICADOR/
     │
     └── data/                  # Configuracion centralizada
         ├── holeConfigs.js          # FUENTE UNICA: posicion, tamanio, color de cada hueco y pieza
-        ├── classifierDimensions.js # Constantes: OUTER=4, WALL_HEIGHT=2.5, PANEL_DEPTH=0.5, etc.
+        ├── classifierDimensions.js # Constantes: OUTER=4, WALL_HEIGHT=2.5, PANEL_DEPTH=0.5 + snap (SNAP_*)
         └── physicsConstants.js     # Constantes de fisica Cannon-es (restitution, friction, damping)
 ```
+
+---
+
+## Convenciones
+
+- **Fabricas**: `create*` para fabricas puras que devuelven un objeto sin efectos secundarios (`createPhysicsWorld`, `createRoom`); `setup*` para las que registran listeners o arrancan side-effects (`setupInterface`, `setupDragManager`, `setupInputManager`).
+- **JSDoc minimo** en modulos nuevos o refactors: firma + `@param` + `@returns` (CON-006).
+- **Constantes**: los numeros que dependen de la geometria del clasificador viven en `classifierDimensions.js`; los de fisica en `physicsConstants.js`. Nada de numeros magicos inline (CON-002, CON-005).
+- **Colores**: usar siempre `var(--color-*)` de `style.css`; no hardcodear hex (CON-004).
 
 ---
 

@@ -9,7 +9,7 @@ import { createLights }         from './lights/Lights.js';
 import { createTextures }       from './textures/TextureFactory.js';
 import { createMaterialFactory } from './materials/MaterialFactory.js';
 import { setupDragManager }     from './controls/DragManager.js';
-import { createInputManager }   from './controls/InputManager.js';
+import { setupInputManager }  from './controls/InputManager.js';
 import { setupCameraFPS }       from './controls/CameraFPS.js';
 import { setupInterface }       from './ui/Interface.js';
 import { setupResize }          from './utils/ResizeHandler.js';
@@ -20,7 +20,7 @@ import { createPhysicsSystem }  from './physics/PhysicsSystem.js';
 import { createClassifierRules } from './game/ClassifierRules.js';
 import { createTimer }           from './game/Timer.js';
 import { HOLE_CONFIGS }         from './data/holeConfigs.js';
-import { WALL_HEIGHT, PANEL_DEPTH, OUTER } from './data/classifierDimensions.js';
+import { WALL_HEIGHT, PANEL_DEPTH, OUTER, SNAP_DISTANCE, SNAP_MIN_HEIGHT, SNAP_ALIGN_HEIGHT } from './data/classifierDimensions.js';
 import { OrbitControls }        from 'three/addons/controls/OrbitControls.js';
 
 try {
@@ -28,7 +28,7 @@ try {
     let fpsControls;
 
     // ─── Input · Escena · Cámara · Renderer ────────────────────────────
-    const inputManager = createInputManager();
+    const inputManager = setupInputManager();
     const scene = createScene();
     const renderer = createRenderer(document.body);
     const { cam } = createCamera();
@@ -55,7 +55,7 @@ try {
     // Cargar la textura de madera local .webp SOLO para la caja clasificadora
     const textureLoader = new THREE.TextureLoader();
     textureLoader.load(
-        'src/imagenes/wood_color.webp',
+        'src/assets/wood_color.webp',
         (tex) => {
             tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
             tex.repeat.set(1.5, 1.5);
@@ -68,7 +68,7 @@ try {
         },
         undefined,
         (err) => {
-            console.warn('[Texturas] No se pudo cargar src/imagenes/wood_color.webp. Usando color de madera plano Montessori.');
+            console.warn('[Texturas] No se pudo cargar src/assets/wood_color.webp. Usando color de madera plano Montessori.');
         }
     );
 
@@ -384,12 +384,12 @@ try {
                     const dz = mesh.position.z - (-cfg.cy);
                     const dist = Math.sqrt(dx * dx + dz * dz);
 
-                    // Si está en un rango cercano (0.85 unidades) y arriba de la tapa
-                    if (dist < 0.85 && mesh.position.y > WALL_HEIGHT - 0.6) {
+                    // Si está en un rango cercano (SNAP_DISTANCE) y arriba de la tapa
+                    if (dist < SNAP_DISTANCE && mesh.position.y > SNAP_MIN_HEIGHT) {
                         const body = mesh.userData.body;
                         const snapX = cfg.cx;
                         const snapZ = -cfg.cy;
-                        const snapY = WALL_HEIGHT + 1.2; // Se eleva un poco más arriba para centrarse
+                        const snapY = SNAP_ALIGN_HEIGHT; // Se eleva un poco más arriba para centrarse
 
                         // Posición y rotación simétrica perfecta
                         mesh.position.set(snapX, snapY, snapZ);
