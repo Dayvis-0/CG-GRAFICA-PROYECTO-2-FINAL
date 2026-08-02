@@ -21,6 +21,7 @@ import { createClassifierRules } from './game/ClassifierRules.js';
 import { createTimer }           from './game/Timer.js';
 import { createGameState }       from './game/GameState.js';
 import { snapToHole }            from './game/SnapHelper.js';
+import { teleportPiece }         from './game/pieceUtils.js';
 import { playErrorSound }        from './utils/audio.js';
 import { HOLE_CONFIGS }         from './data/holeConfigs.js';
 import { WALL_HEIGHT, PANEL_DEPTH, OUTER } from './data/classifierDimensions.js';
@@ -192,6 +193,7 @@ try {
     gameState = createGameState({
         pieces,
         rules,
+        teleportPiece,
         timer,
         dragManagerRef,
         setControlsState,
