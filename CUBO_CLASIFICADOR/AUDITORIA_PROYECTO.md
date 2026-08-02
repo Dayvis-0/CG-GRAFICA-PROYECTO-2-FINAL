@@ -734,7 +734,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 
 ---
 
-# FASE 8 — SRP y modularización
+# FASE 8 — SRP y modularización ✅ (completada)
 
 **Objetivo**: Reducir el "god module" `index.js` extrayendo dominios cohesivos, y dividir `BodyFactory` en su parte de panel. Es la fase con mayor valor arquitectónico.
 
@@ -771,6 +771,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
   - Dejar `index.js` solo con composición + modo de cámara + wiring de eventos.
 - **Dependencias**: DUP-001, DUP-007, FASE 5 (los helpers extraídos primero).
 - **Fase**: FASE 8
+- **Estado**: ✅ Resuelto — `index.js` 467 → 360 líneas, solo composición + modo de cámara + wiring. Se crearon: `src/game/GameState.js` (clasificación, victoria, reset, expulsión — recibe callbacks `onClassified`/`onResetScores`/`onGameOver` y `dragManagerRef`, resolviendo ARQ-001/ARQ-002), `src/game/SnapHelper.js` (`snapToHole` reusa `teleportPiece`, eliminando la duplicación residual del snap de FASE 5), `src/game/pieceUtils.js` (`teleportPiece` compartido por reset/expulsión/snap, DUP-001). El audio ya estaba en `src/utils/audio.js` (DUP-007).
 
 ### SRP-002 — Rama `panel` de `registerStatic` demasiado grande (grilla compuesta)
 - **Categoría**: SRP / Modularización
@@ -783,6 +784,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Extraer `buildPanelGrid(panelMesh, opts)` en `src/physics/PanelGridBuilder.js` devolviendo el `compoundBody`; `registerStatic` lo consume.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 8
+- **Estado**: ✅ Resuelto — `src/physics/PanelGridBuilder.js` con `buildPanelGrid(panelMesh, opts, material)` (misma lógica: bbox, grilla, `isInsideAnyHole`, `addShape`); `registerStatic` lo consume. BodyFactory −66 líneas.
 
 ### SRP-003 — `Interface.js` mezcla HUD, panel de control y toggle (Observación)
 - **Categoría**: SRP (observación)
@@ -795,6 +797,7 @@ El proyecto funciona hoy; la estrategia recomendada es refactorizar por fases de
 - **Recomendación**: Posponer; documentar como candidata a dividir si se agregan más controles.
 - **Dependencias**: Ninguna.
 - **Fase**: FASE 8
+- **Estado**: 📝 Pospuesta (documentada) — 208 líneas sigue siendo aceptable; se dividirá solo si el panel crece.
 
 ---
 
@@ -889,7 +892,7 @@ Ordenado de menor a mayor riesgo para refactorizar con seguridad. **Regla de ver
 | FASE 5 | Código duplicado (quaternion triángulo, teleport, clamps, margen, audio) | Medio | Alta | FASE 4 (margen/constantes) |
 | FASE 6 | Rendimiento (AudioContext singleton, fuentes sin uso, documentación de límites) ✅ | Medio | Media | DUP-007 (para PERF-001) |
 | FASE 7 | Seguridad (SRI/CDN, CSP, textContent) ✅ | Medio | Media | SEC-001 → SEC-002 encadenadas |
-| FASE 8 | SRP y modularización (extraer GameState, SoundController, SnapHelper, PanelGridBuilder) | Medio-Alto | Alta | FASE 5 (helpers extraídos) |
+| FASE 8 | SRP y modularización (extraer GameState, SoundController, SnapHelper, PanelGridBuilder) ✅ | Medio-Alto | Alta | FASE 5 (helpers extraídos) |
 | FASE 9 | Arquitectura y acoplamiento (interfaceCtrl, refs compartidas, reglas en game/) | Alto | Media | FASE 8 |
 
 ---

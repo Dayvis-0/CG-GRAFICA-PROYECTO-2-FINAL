@@ -83,11 +83,15 @@ CUBO_CLASIFICADOR/
     │   ├── PhysicsWorld.js       # Mundo con gravedad -35, solver 30 iter, contact materials, sleep
     │   ├── BodyFactory.js        # Fabrica de bodies: piezas (dinamicos), paredes/panel/piso (estaticos)
     │   ├── PhysicsSystem.js      # Step por frame, sync mesh-body, modo kinematic, drag trail
+    │   ├── PanelGridBuilder.js   # Grilla de Box del panel perforado (respeta huecos) (SRP-002)
     │   └── triangleQuat.js       # Desfase +90° del cuerpo fisico del triangulo (unica fuente)
     │
-    ├── game/
+    ├── game/                  # Logica de juego (SRP-001: extraida de index.js)
     │   ├── ClassifierRules.js    # Logica: verifica si la pieza esta sobre su hueco
-    │   └── Timer.js              # Modulo desacoplado para gestion del temporizador del juego
+    │   ├── Timer.js              # Modulo desacoplado para gestion del temporizador del juego
+    │   ├── GameState.js          # Estado: clasificacion, victoria, reset, expulsion (callbacks de UI/audio)
+    │   ├── SnapHelper.js         # Snap magnetico del onDragEnd (reusa teleportPiece)
+    │   └── pieceUtils.js         # teleportPiece: reubicacion visual+fisica compartida (DUP-001)
     │
     ├── ui/
     │   └── Interface.js          # HUD + panel de control: seleccion, materiales, texturas, wireframe, luces

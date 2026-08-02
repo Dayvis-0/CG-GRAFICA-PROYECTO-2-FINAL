@@ -19,10 +19,11 @@ import { createBodyFactory }    from './physics/BodyFactory.js';
 import { createPhysicsSystem }  from './physics/PhysicsSystem.js';
 import { createClassifierRules } from './game/ClassifierRules.js';
 import { createTimer }           from './game/Timer.js';
-import { playSuccessSound, playErrorSound } from './utils/audio.js';
-import { TRIANGLE_QUAT_OFFSET, quatMeshToBody } from './physics/triangleQuat.js';
+import { createGameState }       from './game/GameState.js';
+import { snapToHole }            from './game/SnapHelper.js';
+import { playErrorSound }        from './utils/audio.js';
 import { HOLE_CONFIGS }         from './data/holeConfigs.js';
-import { WALL_HEIGHT, PANEL_DEPTH, OUTER, SNAP_DISTANCE, SNAP_MIN_HEIGHT, SNAP_ALIGN_HEIGHT } from './data/classifierDimensions.js';
+import { WALL_HEIGHT, PANEL_DEPTH, OUTER } from './data/classifierDimensions.js';
 import { OrbitControls }        from 'three/addons/controls/OrbitControls.js';
 
 try {
@@ -69,7 +70,7 @@ try {
             });
         },
         undefined,
-        (err) => {
+        () => {
             console.warn('[Texturas] No se pudo cargar src/assets/wood_color.webp. Usando color de madera plano Montessori.');
         }
     );
@@ -78,145 +79,16 @@ try {
     const draggingRef = { current: false };
     const activeCameraRef = { current: cam };
 
-    // ─── Lógica del Estado del Juego (Fin de Juego / Victoria) ─────────
-    let gameActive = true;
-    // Handle del timeout de victoria (ERR-001): se cancela al reiniciar para
-    // que el overlay no aparezca sobre una partida ya reiniciada.
-    let winTimeout = null;
-
-    /**
-     * Habilita/deshabilita los controles de cámara del modo activo (DUP-005).
-     * Único punto que toca `orbitControls.enabled` y `fpsControls.setEnabled`.
-     */
-    function setControlsState(active) {
-        orbitControls.enabled = currentMode === 'infantil' && active;
-        if (fpsControls) fpsControls.setEnabled(currentMode === 'experto' && active);
-    }
-
-    function showGameOver(won) {
-        if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
-        gameActive = false;
-        timer.stop();
-        dragManager.setEnabled(false);
-        setControlsState(false);
-
-        const overlay = document.getElementById('game-over-overlay');
-        const title = document.getElementById('game-over-title');
-        const message = document.getElementById('game-over-message');
-        const btn = document.getElementById('game-over-btn');
-
-        if (overlay && title && message && btn) {
-            if (won) {
-                title.textContent = 'COMPLETADO';
-                title.style.color = 'var(--color-success)';
-                message.textContent = '¡Lograste clasificar todas las figuras a tiempo!';
-                btn.textContent = 'JUGAR DE NUEVO 🚀';
-            } else {
-                title.textContent = 'TIEMPO AGOTADO';
-                title.style.color = 'var(--color-danger)';
-                message.textContent = 'Podés volver a intentarlo';
-                btn.textContent = 'REINTENTAR 🔄';
-            }
-            overlay.classList.remove('hidden');
-        }
-    }
-
-    // Vincular el botón del modal de fin de juego
-    document.getElementById('game-over-btn')?.addEventListener('click', () => {
-        const overlay = document.getElementById('game-over-overlay');
-        if (overlay) overlay.classList.add('hidden');
-
-        // Reactivar controles
-        gameActive = true;
-        dragManager.setEnabled(true);
-        setControlsState(true);
-
-        resetPieces();
-    });
-
-    // ─── Control de clasificación (evita doble conteo) ─────────────────
-    const classifiedLabels = new Set();
-    /**
-     * Clasifica la pieza si está sobre su hueco correcto (DUP-009).
-     * Único guard canónico de `isOverOwnHole`: el llamador usa el retorno
-     * booleano para decidir entre clasificar o tratar como infracción.
-     * @param {THREE.Mesh} mesh
-     * @returns {boolean} true si se clasificó en esta llamada
-     */
-    function tryClassify(mesh) {
-        if (!mesh || classifiedLabels.has(mesh.userData.label)) return false;
-        if (rules && rules.isOverOwnHole(mesh)) {
-            classifiedLabels.add(mesh.userData.label);
-            if (interfaceCtrl) interfaceCtrl.onPieceClassified(mesh.userData.label);
-            console.log(`✅ ¡${mesh.userData.label} clasificado!`);
-            playSuccessSound();
-
-            // Si clasificó todas las piezas -> ¡Victoria!
-            if (classifiedLabels.size === HOLE_CONFIGS.length) {
-                winTimeout = setTimeout(() => {
-                    winTimeout = null;
-                    showGameOver(true);
-                }, 800); // Pequeña espera para que termine de caer
-            }
-            return true;
-        }
-        return false;
-    }
-
     // ─── Cronómetro ────────────────────────────────────────────────────
-    const timer = createTimer(() => showGameOver(false));
-
-    // ─── Reset de piezas ──────────────────────────────────────────────
-    /**
-     * Reubica una pieza en `pos`: visual + física + reset de velocidades
-     * (DUP-001). El triángulo usa el desfase centralizado (DUP-002) para que
-     * el cuerpo físico quede como lo registra BodyFactory y la sincronización
-     * visual no lo rote.
-     */
-    function teleportPiece(mesh, pos) {
-        mesh.position.copy(pos);
-        mesh.quaternion.identity();
-
-        const body = mesh.userData.body;
-        if (body) {
-            body.position.set(pos.x, pos.y, pos.z);
-            if (mesh.userData.pieceType === 'triangle') {
-                const q = quatMeshToBody(mesh.quaternion); // identity * offset(+90°)
-                body.quaternion.set(q.x, q.y, q.z, q.w);
-            } else {
-                body.quaternion.set(0, 0, 0, 1);
-            }
-            body.velocity.setZero();
-            body.angularVelocity.setZero();
-            body.wakeUp();
-        }
-    }
-
-    function resetPieces() {
-        // Cancelar una victoria pendiente antes de reiniciar (ERR-001)
-        if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
-
-        for (const child of pieces.children) {
-            if (!child.isMesh) continue;
-            const orig = child.userData.originalPos;
-            if (!orig) continue;
-
-            teleportPiece(child, orig);
-        }
-
-        // Resetear clasificación + cronómetro
-        classifiedLabels.clear();
-        if (interfaceCtrl) interfaceCtrl.resetScores();
-        timer.reset();
-        console.log('🔄 Piezas reiniciadas');
-    }
+    let gameState;
+    const timer = createTimer(() => gameState.showGameOver(false));
 
     // ─── Físicas (cannon-es) ───────────────────────────────────────────
     const physicsWorld = createPhysicsWorld();
     const bodyFactory = createBodyFactory(physicsWorld.world, physicsWorld.materials);
 
     // Cuerpos estáticos: piso y paredes del cuarto + paredes del clasificador
-    // + panel con Trimesh (huecos físicos reales).
+    // + panel con grilla (huecos físicos reales).
     for (const child of room.children) {
         if (!child.isMesh) continue;
         const kind = (child.position.y < 0.5) ? 'ground' : 'room-wall';
@@ -239,8 +111,8 @@ try {
     const rules = createClassifierRules();
 
     // ─── Controles ─────────────────────────────────────────────────────
-    // Obstáculos del arrastre y colisiones: SOLO paredes del clasificador (el panel Trimesh
-    // ya detecta colisiones con huecos reales vía cannon).
+    // Obstáculos del arrastre y colisiones: SOLO paredes del clasificador (el panel
+    // con grilla ya detecta colisiones con huecos reales vía cannon).
     const dragObstacles = [...walls];
 
     // Inicializar OrbitControls para la cámara orbital
@@ -255,6 +127,15 @@ try {
 
     // Inicializar FPS Controls (inicia desactivado)
     fpsControls = setupCameraFPS(cam, renderer, room.userData.bounds, dragObstacles, draggingRef, inputManager);
+
+    /**
+     * Habilita/deshabilita los controles de cámara del modo activo (DUP-005).
+     * Único punto que toca `orbitControls.enabled` y `fpsControls.setEnabled`.
+     */
+    function setControlsState(active) {
+        orbitControls.enabled = currentMode === 'infantil' && active;
+        if (fpsControls) fpsControls.setEnabled(currentMode === 'experto' && active);
+    }
 
     function setCameraMode(mode) {
         currentMode = mode;
@@ -295,21 +176,49 @@ try {
     document.getElementById('cam-infantil-btn')?.addEventListener('click', () => setCameraMode('infantil'));
     document.getElementById('cam-experto-btn')?.addEventListener('click', () => setCameraMode('experto'));
 
-    // Controlador unificado para el loop de animación
-    const cameraController = {
-        update() {
-            if (currentMode === 'infantil') {
-                orbitControls.enabled = !draggingRef.current && gameActive;
-                orbitControls.update();
-            } else {
-                fpsControls.update();
-            }
-        }
-    };
+    // ─── Estado del juego (SRP-001) ────────────────────────────────────
+    // Ref mutable para la dependencia circular gameState ↔ dragManager (ARQ-002)
+    const dragManagerRef = { current: null };
+    let interfaceCtrl;
+    gameState = createGameState({
+        pieces,
+        rules,
+        timer,
+        dragManagerRef,
+        setControlsState,
+        onClassified: (label) => {
+            if (interfaceCtrl) interfaceCtrl.onPieceClassified(label);
+            console.log(`✅ ¡${label} clasificado!`);
+        },
+        onResetScores: () => {
+            if (interfaceCtrl) interfaceCtrl.resetScores();
+        },
+        onGameOver: (won) => {
+            const overlay = document.getElementById('game-over-overlay');
+            const title = document.getElementById('game-over-title');
+            const message = document.getElementById('game-over-message');
+            const btn = document.getElementById('game-over-btn');
 
+            if (overlay && title && message && btn) {
+                if (won) {
+                    title.textContent = 'COMPLETADO';
+                    title.style.color = 'var(--color-success)';
+                    message.textContent = '¡Lograste clasificar todas las figuras a tiempo!';
+                    btn.textContent = 'JUGAR DE NUEVO 🚀';
+                } else {
+                    title.textContent = 'TIEMPO AGOTADO';
+                    title.style.color = 'var(--color-danger)';
+                    message.textContent = 'Podés volver a intentarlo';
+                    btn.textContent = 'REINTENTAR 🔄';
+                }
+                overlay.classList.remove('hidden');
+            }
+        },
+    });
+
+    // ─── Drag (depende de gameState para el snap) ──────────────────────
     const POST_DRAG_LOCK_DELAY = 120; // ms de espera post-suelte para evitar pointer lock accidental
 
-    let interfaceCtrl;
     const dragManager = setupDragManager(activeCameraRef, renderer, {
         piecesGroup: pieces,
         physicsSystem,
@@ -324,51 +233,17 @@ try {
             draggingRef.current = true;
             timer.start();
         },
-        onDragEnd:   (mesh) => {
+        onDragEnd: (mesh) => {
             // Evita que el click post-suelte active el pointer lock en modo FPS
             setTimeout(() => { draggingRef.current = false; }, POST_DRAG_LOCK_DELAY);
-            
-            // Snap posicional y rotacional Montessori si la pieza está CERCA de su hueco correcto
-            if (mesh) {
-                const cfg = HOLE_CONFIGS.find(c => c.label === mesh.userData.label);
-                if (cfg) {
-                    // Calcular distancia horizontal (X/Z) al centro de su hueco correspondiente
-                    const dx = mesh.position.x - cfg.cx;
-                    const dz = mesh.position.z - (-cfg.cy);
-                    const dist = Math.sqrt(dx * dx + dz * dz);
 
-                    // Si está en un rango cercano (SNAP_DISTANCE) y arriba de la tapa
-                    if (dist < SNAP_DISTANCE && mesh.position.y > SNAP_MIN_HEIGHT) {
-                        const body = mesh.userData.body;
-                        const snapX = cfg.cx;
-                        const snapZ = -cfg.cy;
-                        const snapY = SNAP_ALIGN_HEIGHT; // Se eleva un poco más arriba para centrarse
-
-                        // Posición y rotación simétrica perfecta
-                        mesh.position.set(snapX, snapY, snapZ);
-                        mesh.quaternion.identity();
-
-                        if (body) {
-                            body.position.set(snapX, snapY, snapZ);
-                            // Triángulo: desfase centralizado (DUP-002); el resto, identidad
-                            if (mesh.userData.pieceType === 'triangle') {
-                                body.quaternion.set(
-                                    TRIANGLE_QUAT_OFFSET.x, TRIANGLE_QUAT_OFFSET.y,
-                                    TRIANGLE_QUAT_OFFSET.z, TRIANGLE_QUAT_OFFSET.w,
-                                );
-                            } else {
-                                body.quaternion.set(0, 0, 0, 1);
-                            }
-                            body.velocity.setZero();
-                            body.angularVelocity.setZero();
-                            body.wakeUp();
-                        }
-                        console.log(`🧲 Pieza ${mesh.userData.label} atraída y alineada simétricamente a la altura correcta.`);
-                    }
-                }
-            }
+            // Snap posicional y rotacional Montessori (SRP-001): reusa teleportPiece
+            if (mesh) snapToHole(mesh);
         },
     });
+
+    // Completar la referencia circular del estado de juego (ARQ-002)
+    dragManagerRef.current = dragManager;
 
     // ─── UI + Responsive + Bucle principal ─────────────────────────────
     interfaceCtrl = setupInterface({
@@ -383,7 +258,16 @@ try {
         scene,
         renderer,
         activeCameraRef,
-        fpsControl: cameraController,
+        fpsControl: {
+            update() {
+                if (currentMode === 'infantil') {
+                    orbitControls.enabled = !draggingRef.current && gameState.isActive;
+                    orbitControls.update();
+                } else {
+                    fpsControls.update();
+                }
+            }
+        },
         pieces,
         physicsSystem,
         inputManager,
@@ -393,9 +277,9 @@ try {
             for (const child of pieces.children) {
                 if (!child.isMesh) continue;
                 const label = child.userData.label;
-                
+
                 // Si ya fue correctamente clasificada, no hacemos nada
-                if (classifiedLabels.has(label)) continue;
+                if (gameState.isClassified(label)) continue;
 
                 // Para evitar falsos positivos con piezas que están afuera en el suelo,
                 // solo verificamos infracciones si la pieza está físicamente dentro del perímetro X/Z del clasificador.
@@ -405,14 +289,10 @@ try {
                 // Si la pieza pasó por debajo del panel superior Y está dentro de la caja
                 if (isInsideClassifierXZ && child.position.y < WALL_HEIGHT - 0.2) {
                     // Guard canónico en tryClassify (DUP-009): si no clasifica, es infracción
-                    if (!tryClassify(child)) {
+                    if (!gameState.tryClassify(child)) {
                         // ¡ERROR! Entró en un hueco incorrecto (porque físicamente cabía).
-                        // Reproducir sonido de error
                         playErrorSound();
-                        
-                        // Expulsar de vuelta a su posición original
-                        const orig = child.userData.originalPos;
-                        if (orig) teleportPiece(child, orig);
+                        gameState.expelPiece(child);
                         console.log(`❌ ¡Infracción! ${label} entró por un hueco equivocado y fue expulsada.`);
                     }
                 }
@@ -434,14 +314,27 @@ try {
         console.log(`👤 Bienvenido, ${name}`);
     });
 
+    // ─── Botón del modal de fin de juego ─────────────────────────────
+    document.getElementById('game-over-btn')?.addEventListener('click', () => {
+        const overlay = document.getElementById('game-over-overlay');
+        if (overlay) overlay.classList.add('hidden');
+
+        // Reactivar controles
+        gameState.setActive(true);
+        dragManager.setEnabled(true);
+        setControlsState(true);
+
+        gameState.resetPieces();
+    });
+
     // ─── Botón + tecla 'R' para reiniciar ─────────────────────────────
     const resetBtn = document.getElementById('reset-btn');
-    if (resetBtn) resetBtn.onclick = resetPieces;
+    if (resetBtn) resetBtn.onclick = gameState.resetPieces;
     window.addEventListener('keydown', (e) => {
         if (e.key === 'r' || e.key === 'R') {
             // No reiniciar si está escribiendo en un input
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            resetPieces();
+            gameState.resetPieces();
         }
     });
 

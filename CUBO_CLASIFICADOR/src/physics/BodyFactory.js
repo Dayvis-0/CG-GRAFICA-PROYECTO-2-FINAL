@@ -1,30 +1,9 @@
 import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { PHYSICS_CONSTANTS } from '../data/physicsConstants.js';
-import { isPointInsideShape } from '../utils/HoleDetector.js';
 import { getHalfSize } from '../utils/geometry.js';
 import { TRIANGLE_QUAT_OFFSET } from './triangleQuat.js';
-
-/**
- * Verifica si un punto (sx, sy) en el espacio del Shape cae dentro de algún hueco.
- * Usa la función unificada centralizada para evitar duplicación.
- */
-function isInsideAnyHole(sx, sy, holeConfigs, halfCell) {
-    for (const cfg of holeConfigs) {
-        // Asignamos márgenes específicos para las formas complejas:
-        // - El rombo requiere un margen de (halfCell * 2.2)
-        // - El triángulo requiere (halfCell * 2.0) para compensar la grilla cuadrada contra los bordes de 30 grados
-        let m = halfCell;
-        if (cfg.shape === 'rhombus') {
-            m = halfCell * 2.2;
-        } else if (cfg.shape === 'triangle') {
-            m = halfCell * 2.0;
-        }
-        
-        if (isPointInsideShape(sx, sy, cfg, m)) return true;
-    }
-    return false;
-}
+import { buildPanelGrid } from './PanelGridBuilder.js';
 
 /**
  * Fábrica de cuerpos rígidos cannon-es a partir de meshes Three.
@@ -141,46 +120,9 @@ export function createBodyFactory(world, materials) {
         let shape;
 
         if (kind === 'panel') {
-            // ─── Panel con huecos: grilla de Box bodies ────────────────
-            // CANNON.Trimesh solo soporta colisiones Sphere vs Trimesh y
-            // Plane vs Trimesh en el narrowphase. Las demás formas (Box,
-            // Cylinder/Convex) NO colisionan contra Trimesh, así que las
-            // piezas se traspasan. En vez de Trimesh, construimos una
-            // grilla de CANNON.Box que cubre las partes sólidas del panel,
-            // dejando huecos vacíos. Box es compatible con TODAS las formas.
-            const bbox = new THREE.Box3().setFromObject(mesh);
-            const center = new THREE.Vector3();
-            bbox.getCenter(center);
-            const bsize = new THREE.Vector3();
-            bbox.getSize(bsize);
-
-            // Creamos UN solo body estático compuesto (varios shapes)
-            const compoundBody = new CANNON.Body({
-                mass: 0,
-                material: materialForKind(kind),
-                type: CANNON.Body.STATIC,
-                position: new CANNON.Vec3(center.x, center.y, center.z),
-            });
-
-            const halfExtent = bsize.x / 2; // mitad del panel en X/Z (en shape space ≈ world X/Z)
-            const cellSize = opts.gridCellSize || 0.25;
-            const halfCell = cellSize / 2;
-            const halfDepth = bsize.y / 2; // grosor del panel (Y en world space)
-            const holeConfigs = opts.holeConfigs || [];
-
-            // Iteramos en shape space (XY del Shape original)
-            // shape (sx, sy) → world offset (sx, 0, -sy) relativo al body center
-            for (let sx = -halfExtent + halfCell; sx <= halfExtent - halfCell; sx += cellSize) {
-                for (let sy = -halfExtent + halfCell; sy <= halfExtent - halfCell; sy += cellSize) {
-                    if (isInsideAnyHole(sx, sy, holeConfigs, halfCell)) continue;
-                    const halfW = cellSize / 2;
-                    const halfH = cellSize / 2;
-                    compoundBody.addShape(
-                        new CANNON.Box(new CANNON.Vec3(halfW, halfDepth, halfH)),
-                        new CANNON.Vec3(sx, 0, -sy),
-                    );
-                }
-            }
+            // Panel con huecos: grilla de Box bodies (SRP-002) construida por
+            // PanelGridBuilder. Box es compatible con TODAS las formas de pieza.
+            const compoundBody = buildPanelGrid(mesh, opts, materialForKind(kind));
 
             world.addBody(compoundBody);
             // Guardamos referencia en el map para consistencia (aunque nadie consulta el panel)
