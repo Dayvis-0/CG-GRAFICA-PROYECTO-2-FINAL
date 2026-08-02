@@ -213,7 +213,8 @@ Cada frame:
 - Filtro rapido: si `mesh.position.y < WALL_HEIGHT - 1.0`, retorna false (muy abajo)
 - Convierte posicion mundial a coordenadas del Shape (`sx = x`, `sy = -z`)
 - Usa `HoleDetector.isInsideHole()` con tolerancia 0.1 para compensar imprecision de camara FPS
-- En `onDragEnd` de DragManager, si la pieza se suelta a menos de 0.85 unidades del centro de su hueco (y arriba de la tapa), se aplica un snap magnetico que la posiciona y reorienta simetricamente sobre el hueco
+
+El **snap magnetico** del suelte esta explicado en [Como jugar](#como-jugar); su implementacion vive en `game/SnapHelper.js`.
 
 ---
 
@@ -237,7 +238,6 @@ firefox index.html
 
 ## Mejoras posibles
 
-- Sistema de puntuacion / timer
 - Feedback visual y sonoro cuando una pieza encaja
 - Mas piezas y formas de hueco (rectangulo, hexagono, cono, cilindro)
 - Modo multijugador o niveles progresivos

@@ -15,6 +15,10 @@ export function circleHole(cx, cy, r) {
 
 /**
  * Crea un hueco cuadrado.
+ * @param {number} cx
+ * @param {number} cy
+ * @param {number} side
+ * @returns {Path}
  */
 export function squareHole(cx, cy, side) {
     const half = side / 2;
