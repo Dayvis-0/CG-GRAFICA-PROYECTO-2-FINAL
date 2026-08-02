@@ -19,6 +19,8 @@ import { createBodyFactory }    from './physics/BodyFactory.js';
 import { createPhysicsSystem }  from './physics/PhysicsSystem.js';
 import { createClassifierRules } from './game/ClassifierRules.js';
 import { createTimer }           from './game/Timer.js';
+import { playSuccessSound, playErrorSound } from './utils/audio.js';
+import { TRIANGLE_QUAT_OFFSET, quatMeshToBody } from './physics/triangleQuat.js';
 import { HOLE_CONFIGS }         from './data/holeConfigs.js';
 import { WALL_HEIGHT, PANEL_DEPTH, OUTER, SNAP_DISTANCE, SNAP_MIN_HEIGHT, SNAP_ALIGN_HEIGHT } from './data/classifierDimensions.js';
 import { OrbitControls }        from 'three/addons/controls/OrbitControls.js';
@@ -76,92 +78,27 @@ try {
     const draggingRef = { current: false };
     const activeCameraRef = { current: cam };
 
-    // ─── Sonido de éxito Montessori (Xilofón de madera) ────────────────
-    function playSuccessSound() {
-        try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-            const ctx = new AudioCtx();
-            const now = ctx.currentTime;
-
-            // Nota 1 (fundamental suave)
-            const osc1 = ctx.createOscillator();
-            const gain1 = ctx.createGain();
-            osc1.type = 'triangle'; // Onda suave, tipo flauta o madera
-            osc1.frequency.setValueAtTime(523.25, now); // C5 (Do)
-            gain1.gain.setValueAtTime(0.25, now);
-            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
-            osc1.connect(gain1);
-            gain1.connect(ctx.destination);
-
-            // Nota 2 (Armónico alegre de quinta posterior)
-            const osc2 = ctx.createOscillator();
-            const gain2 = ctx.createGain();
-            osc2.type = 'triangle';
-            osc2.frequency.setValueAtTime(659.25, now + 0.08); // E5 (Mi)
-            gain2.gain.setValueAtTime(0.20, now + 0.08);
-            gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.58);
-            osc2.connect(gain2);
-            gain2.connect(ctx.destination);
-
-            osc1.start(now);
-            osc1.stop(now + 0.6);
-            osc2.start(now + 0.08);
-            osc2.stop(now + 0.68);
-        } catch (e) {
-            console.warn('Web Audio no inicializado o bloqueado por el navegador:', e);
-        }
-    }
-
-    // ─── Sonido de error Montessori (Tono grave seco) ───────────────────
-    // ERR-005: cooldown para que no suene en bucle si una pieza queda atascada
-    // en un hueco incorrecto (el loop de post-física se ejecuta por frame).
-    let lastErrorSoundTime = 0;
-
-    function playErrorSound() {
-        const timeNow = performance.now();
-        if (timeNow - lastErrorSoundTime < 400) return;
-        lastErrorSoundTime = timeNow;
-
-        try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-            const ctx = new AudioCtx();
-            const now = ctx.currentTime;
-
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.type = 'sawtooth'; // Sonido rasposo de zumbador
-            osc.frequency.setValueAtTime(140, now); // Frecuencia baja (error)
-            gain.gain.setValueAtTime(0.18, now);
-            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-            
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-
-            osc.start(now);
-            osc.stop(now + 0.35);
-        } catch (e) {
-            console.warn(e);
-        }
-    }
-
     // ─── Lógica del Estado del Juego (Fin de Juego / Victoria) ─────────
     let gameActive = true;
     // Handle del timeout de victoria (ERR-001): se cancela al reiniciar para
     // que el overlay no aparezca sobre una partida ya reiniciada.
     let winTimeout = null;
 
+    /**
+     * Habilita/deshabilita los controles de cámara del modo activo (DUP-005).
+     * Único punto que toca `orbitControls.enabled` y `fpsControls.setEnabled`.
+     */
+    function setControlsState(active) {
+        orbitControls.enabled = currentMode === 'infantil' && active;
+        if (fpsControls) fpsControls.setEnabled(currentMode === 'experto' && active);
+    }
+
     function showGameOver(won) {
         if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
         gameActive = false;
         timer.stop();
         dragManager.setEnabled(false);
-        if (currentMode === 'infantil') {
-            orbitControls.enabled = false;
-        } else if (fpsControls) {
-            fpsControls.setEnabled(false);
-        }
+        setControlsState(false);
 
         const overlay = document.getElementById('game-over-overlay');
         const title = document.getElementById('game-over-title');
@@ -192,19 +129,22 @@ try {
         // Reactivar controles
         gameActive = true;
         dragManager.setEnabled(true);
-        if (currentMode === 'infantil') {
-            orbitControls.enabled = true;
-        } else if (fpsControls) {
-            fpsControls.setEnabled(true);
-        }
+        setControlsState(true);
 
         resetPieces();
     });
 
     // ─── Control de clasificación (evita doble conteo) ─────────────────
     const classifiedLabels = new Set();
+    /**
+     * Clasifica la pieza si está sobre su hueco correcto (DUP-009).
+     * Único guard canónico de `isOverOwnHole`: el llamador usa el retorno
+     * booleano para decidir entre clasificar o tratar como infracción.
+     * @param {THREE.Mesh} mesh
+     * @returns {boolean} true si se clasificó en esta llamada
+     */
     function tryClassify(mesh) {
-        if (!mesh || classifiedLabels.has(mesh.userData.label)) return;
+        if (!mesh || classifiedLabels.has(mesh.userData.label)) return false;
         if (rules && rules.isOverOwnHole(mesh)) {
             classifiedLabels.add(mesh.userData.label);
             if (interfaceCtrl) interfaceCtrl.onPieceClassified(mesh.userData.label);
@@ -218,13 +158,40 @@ try {
                     showGameOver(true);
                 }, 800); // Pequeña espera para que termine de caer
             }
+            return true;
         }
+        return false;
     }
 
     // ─── Cronómetro ────────────────────────────────────────────────────
     const timer = createTimer(() => showGameOver(false));
 
     // ─── Reset de piezas ──────────────────────────────────────────────
+    /**
+     * Reubica una pieza en `pos`: visual + física + reset de velocidades
+     * (DUP-001). El triángulo usa el desfase centralizado (DUP-002) para que
+     * el cuerpo físico quede como lo registra BodyFactory y la sincronización
+     * visual no lo rote.
+     */
+    function teleportPiece(mesh, pos) {
+        mesh.position.copy(pos);
+        mesh.quaternion.identity();
+
+        const body = mesh.userData.body;
+        if (body) {
+            body.position.set(pos.x, pos.y, pos.z);
+            if (mesh.userData.pieceType === 'triangle') {
+                const q = quatMeshToBody(mesh.quaternion); // identity * offset(+90°)
+                body.quaternion.set(q.x, q.y, q.z, q.w);
+            } else {
+                body.quaternion.set(0, 0, 0, 1);
+            }
+            body.velocity.setZero();
+            body.angularVelocity.setZero();
+            body.wakeUp();
+        }
+    }
+
     function resetPieces() {
         // Cancelar una victoria pendiente antes de reiniciar (ERR-001)
         if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
@@ -234,19 +201,7 @@ try {
             const orig = child.userData.originalPos;
             if (!orig) continue;
 
-            // Posición visual
-            child.position.copy(orig);
-            child.quaternion.identity();
-
-            // Posición física
-            const body = child.userData.body;
-            if (body) {
-                body.position.set(orig.x, orig.y, orig.z);
-                body.quaternion.set(0, 0, 0, 1);
-                body.velocity.setZero();
-                body.angularVelocity.setZero();
-                body.wakeUp();
-            }
+            teleportPiece(child, orig);
         }
 
         // Resetear clasificación + cronómetro
@@ -308,10 +263,8 @@ try {
         const hintEl = document.getElementById('hint');
 
         if (mode === 'experto') {
-            // Desactivar órbita
-            orbitControls.enabled = false;
-            // Activar FPS
-            fpsControls.setEnabled(true);
+            // Desactivar órbita + activar FPS
+            setControlsState(true);
             fpsControls.resetRotation();
             // Posicionar a altura de ojos (1.6)
             cam.position.set(5, 1.6, 5);
@@ -322,10 +275,8 @@ try {
                 hintEl.innerHTML = 'Modo WASD: WASD para caminar · Clic en pantalla para capturar mouse · Arrastrá figuras';
             }
         } else {
-            // Desactivar FPS
-            fpsControls.setEnabled(false);
-            // Activar órbita
-            orbitControls.enabled = true;
+            // Desactivar FPS + activar órbita
+            setControlsState(true);
             // Posición inicial infantil orbital
             cam.position.set(0, 4.5, 6.0);
             orbitControls.target.set(0, 1.5, 0);
@@ -397,10 +348,12 @@ try {
 
                         if (body) {
                             body.position.set(snapX, snapY, snapZ);
-                            // Triángulo requiere una rotación especial en Cannon-es para alinearse físicamente
+                            // Triángulo: desfase centralizado (DUP-002); el resto, identidad
                             if (mesh.userData.pieceType === 'triangle') {
-                                const s = Math.SQRT1_2;
-                                body.quaternion.set(0, s, 0, s);
+                                body.quaternion.set(
+                                    TRIANGLE_QUAT_OFFSET.x, TRIANGLE_QUAT_OFFSET.y,
+                                    TRIANGLE_QUAT_OFFSET.z, TRIANGLE_QUAT_OFFSET.w,
+                                );
                             } else {
                                 body.quaternion.set(0, 0, 0, 1);
                             }
@@ -449,29 +402,15 @@ try {
 
                 // Si la pieza pasó por debajo del panel superior Y está dentro de la caja
                 if (isInsideClassifierXZ && child.position.y < WALL_HEIGHT - 0.2) {
-                    // Verificar si está sobre su hueco correcto
-                    if (rules && rules.isOverOwnHole(child)) {
-                        tryClassify(child);
-                    } else {
+                    // Guard canónico en tryClassify (DUP-009): si no clasifica, es infracción
+                    if (!tryClassify(child)) {
                         // ¡ERROR! Entró en un hueco incorrecto (porque físicamente cabía).
                         // Reproducir sonido de error
                         playErrorSound();
                         
                         // Expulsar de vuelta a su posición original
                         const orig = child.userData.originalPos;
-                        if (orig) {
-                            child.position.copy(orig);
-                            child.quaternion.identity();
-                            
-                            const body = child.userData.body;
-                            if (body) {
-                                body.position.set(orig.x, orig.y, orig.z);
-                                body.quaternion.set(0, 0, 0, 1);
-                                body.velocity.setZero();
-                                body.angularVelocity.setZero();
-                                body.wakeUp();
-                            }
-                        }
+                        if (orig) teleportPiece(child, orig);
                         console.log(`❌ ¡Infracción! ${label} entró por un hueco equivocado y fue expulsada.`);
                     }
                 }

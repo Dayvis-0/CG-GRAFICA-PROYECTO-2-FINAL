@@ -2,6 +2,8 @@ import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { PHYSICS_CONSTANTS } from '../data/physicsConstants.js';
 import { isPointInsideShape } from '../utils/HoleDetector.js';
+import { getHalfSize } from '../utils/geometry.js';
+import { TRIANGLE_QUAT_OFFSET } from './triangleQuat.js';
 
 /**
  * Verifica si un punto (sx, sy) en el espacio del Shape cae dentro de algún hueco.
@@ -36,39 +38,31 @@ export function createBodyFactory(world, materials) {
     /** Crea la forma cannon correspondiente a cada pieza según pieceType. */
     function buildPieceShape(mesh) {
         const type = mesh.userData.pieceType;
-        const bbox = new THREE.Box3().setFromObject(mesh);
-        const size = new THREE.Vector3();
-        bbox.getSize(size);
+        const hs = getHalfSize(mesh);
 
         switch (type) {
             case 'sphere': {
-                const r = size.x / 2;
+                const r = hs.x;
                 return new CANNON.Sphere(r);
             }
             case 'box': {
-                return new CANNON.Box(new CANNON.Vec3(
-                    size.x / 2, size.y / 2, size.z / 2,
-                ));
+                return new CANNON.Box(new CANNON.Vec3(hs.x, hs.y, hs.z));
             }
             case 'triangle': {
                 // Prisma triangular: Cylinder con 3 segmentos.
                 // pieceArgs = [r, depth]; usamos radius igual top y bottom.
-                const r = size.x / 2;
-                const h = size.y;
+                const r = hs.x;
+                const h = hs.y * 2;
                 return new CANNON.Cylinder(r, r, h, 3);
             }
             case 'rhombus': {
                 // Reducimos el tamaño de la caja de colisión física (0.62) para que pase holgadamente
                 // a través del hueco físico sin atascarse.
-                return new CANNON.Box(new CANNON.Vec3(
-                    size.x * 0.62 / 2, size.y / 2, size.z * 0.62 / 2
-                ));
+                return new CANNON.Box(new CANNON.Vec3(hs.x * 0.62, hs.y, hs.z * 0.62));
             }
             default: {
                 console.warn(`Unknown pieceType "${type}", usando Box fallback`);
-                return new CANNON.Box(new CANNON.Vec3(
-                    size.x / 2, size.y / 2, size.z / 2,
-                ));
+                return new CANNON.Box(new CANNON.Vec3(hs.x, hs.y, hs.z));
             }
         }
     }
@@ -90,14 +84,14 @@ export function createBodyFactory(world, materials) {
 
         // El CANNON.Cylinder(3) genera el 1er vértice en +X, pero el triángulo
         // visual (Pieces.js) tiene el "top" apuntando a -Z tras rotateX(-PI/2).
-        // Sin esta rotación, el collision body entra desalineado al hueco y
-        // sus vértices chocan contra las paredes de la grilla.
+        // Aplicamos el desfase centralizado (DUP-002): sin él, el collision body
+        // entra desalineado al hueco y sus vértices chocan contra la grilla.
         let quat;
         if (mesh.userData.pieceType === 'triangle') {
-            const s = Math.SQRT1_2; // sin(45°) ≈ 0.707
-            // +90° alrededor de Y: el 1er vértice del Cylinder(3) va de +X a -Z,
-            // alineándose con el "top" del triángulo visual (que apunta a -Z)
-            quat = new CANNON.Quaternion(0, s, 0, s);
+            quat = new CANNON.Quaternion(
+                TRIANGLE_QUAT_OFFSET.x, TRIANGLE_QUAT_OFFSET.y,
+                TRIANGLE_QUAT_OFFSET.z, TRIANGLE_QUAT_OFFSET.w,
+            );
         } else {
             quat = new CANNON.Quaternion(
                 mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w,

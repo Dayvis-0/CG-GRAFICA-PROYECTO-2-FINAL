@@ -1,5 +1,5 @@
-import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { quatMeshToBody, quatBodyToMesh } from './triangleQuat.js';
 
 /**
  * Avanza el mundo cannon-es por frame y sincroniza meshes con sus bodies.
@@ -43,12 +43,8 @@ export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
             body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
             
             if (mesh.userData.pieceType === 'triangle') {
-                // Al pasar a dinámico, sumamos los +90 grados en Y requeridos por el cuerpo físico
-                const quatOffset = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-                const physQuat = new THREE.Quaternion(
-                    mesh.quaternion.x, mesh.quaternion.y,
-                    mesh.quaternion.z, mesh.quaternion.w
-                ).multiply(quatOffset);
+                // Al pasar a dinámico, sumamos los +90 grados en Y requeridos por el cuerpo físico (DUP-002)
+                const physQuat = quatMeshToBody(mesh.quaternion);
                 body.quaternion.set(physQuat.x, physQuat.y, physQuat.z, physQuat.w);
             } else {
                 body.quaternion.set(
@@ -177,15 +173,8 @@ export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
             
             if (child.userData.pieceType === 'triangle') {
                 // Deshacer el desfase de +90 grados en Y del cuerpo físico
-                // aplicando -90 grados en Y al mesh visual para mantenerlo simétrico
-                const quatOffset = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
-                const visualQuat = new THREE.Quaternion(
-                    body.quaternion.x,
-                    body.quaternion.y,
-                    body.quaternion.z,
-                    body.quaternion.w
-                ).multiply(quatOffset);
-                child.quaternion.copy(visualQuat);
+                // aplicando -90 grados en Y al mesh visual para mantenerlo simétrico (DUP-002)
+                child.quaternion.copy(quatBodyToMesh(body.quaternion));
             } else {
                 child.quaternion.set(
                     body.quaternion.x,

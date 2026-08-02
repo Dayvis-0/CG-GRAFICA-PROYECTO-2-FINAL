@@ -82,7 +82,8 @@ CUBO_CLASIFICADOR/
     ├── physics/               # Simulacion fisica (cannon-es)
     │   ├── PhysicsWorld.js       # Mundo con gravedad -35, solver 30 iter, contact materials, sleep
     │   ├── BodyFactory.js        # Fabrica de bodies: piezas (dinamicos), paredes/panel/piso (estaticos)
-    │   └── PhysicsSystem.js      # Step por frame, sync mesh-body, modo kinematic, drag trail
+    │   ├── PhysicsSystem.js      # Step por frame, sync mesh-body, modo kinematic, drag trail
+    │   └── triangleQuat.js       # Desfase +90° del cuerpo fisico del triangulo (unica fuente)
     │
     ├── game/
     │   ├── ClassifierRules.js    # Logica: verifica si la pieza esta sobre su hueco
@@ -98,8 +99,9 @@ CUBO_CLASIFICADOR/
     │   ├── ResizeHandler.js      # Responsive: resize camara + renderer optimizado con requestAnimationFrame
     │   ├── CollisionHelper.js    # Helper centralizado para consultas AABB (intersectsAnyObstacle, isPointInsideBox)
     │   ├── HoleDetector.js       # Deteccion punto-en-forma con tolerancia (circulo, cuadrado, triangulo, rombo)
-    │   ├── math.js               # Utilidad de restriccion espacial (clampToBounds)
-    │   ├── geometry.js           # pointInTriangle (punto dentro de un triangulo)
+    │   ├── math.js               # Utilidad de restriccion espacial (clampToBounds X/Z/Y)
+    │   ├── geometry.js           # pointInTriangle + getHalfSize (bounding box de piezas)
+    │   ├── audio.js              # Audio compartido: AudioContext singleton + tonos success/error
     │   └── holeShapes.js         # Generacion de Paths Three.js para los 4 tipos de hueco
     │
     └── data/                  # Configuracion centralizada

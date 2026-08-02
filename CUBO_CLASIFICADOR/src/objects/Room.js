@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 
 /**
  * Crea el cuarto completo: piso, techo y 4 paredes con sombras y materiales PBR.
@@ -77,7 +78,7 @@ export function createRoom({ size = 14, height = 8 } = {}) {
 
     // Guardar límites para colisión de cámara
     group.userData = {
-        bounds: { half, height, margin: 0.5 },
+        bounds: { half, height, margin: ROOM_MARGIN },
     };
 
     return group;

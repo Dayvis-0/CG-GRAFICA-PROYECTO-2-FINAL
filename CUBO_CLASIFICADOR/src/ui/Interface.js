@@ -181,13 +181,7 @@ export function setupInterface({
         };
     }
 
-    // ─── Instrucciones del pie de página (Hint) ──
-    const hintEl = document.getElementById('hint');
-    if (hintEl) {
-        hintEl.innerHTML = 'Arrastrá las figuras hacia sus respectivos huecos. Arrastrá el fondo para girar la cámara.';
-    }
-
-    // ─── Inicializar ────────────────────────────
+    // ─── Inicializar ────────────────────────────────────────────
     updateHUD();
     updatePanelSelection();
 

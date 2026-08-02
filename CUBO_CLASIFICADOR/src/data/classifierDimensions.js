@@ -12,3 +12,6 @@ export const MID         = OUTER / 2;
 export const SNAP_DISTANCE     = 0.85;            // rango horizontal para acoplar la pieza a su hueco
 export const SNAP_MIN_HEIGHT   = WALL_HEIGHT - 0.6; // altura mínima para permitir el snap
 export const SNAP_ALIGN_HEIGHT = WALL_HEIGHT + 1.2; // altura final de la pieza alineada
+
+// Margen de seguridad contra las paredes del cuarto (DUP-004)
+export const ROOM_MARGIN       = 0.5;

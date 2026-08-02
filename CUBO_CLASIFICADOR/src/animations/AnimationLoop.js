@@ -1,5 +1,7 @@
-import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
+import { clampToBounds } from '../utils/math.js';
+import { getHalfSize } from '../utils/geometry.js';
+import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 
 /**
  * Bucle de renderizado principal: FPS, físicas, clamp de seguridad, input y render.
@@ -29,12 +31,9 @@ export function setupAnimationLoop({
     onPostPhysics,
 }) {
     // ─── Reusables para clamp post-física ────────────────────────
-    const _box    = new THREE.Box3();
-    const _offMin = new THREE.Vector3();
-    const _offMax = new THREE.Vector3();
     const HALF   = roomBounds?.half ?? 7;
     const HEIGHT = roomBounds?.height ?? 8;
-    const MARGIN = 0.5; // mismo margen que DragManager
+    const MARGIN = ROOM_MARGIN; // mismo margen que DragManager (DUP-004)
 
     // Cache de half-sizes por pieza (geometría no cambia en runtime)
     const _halfSizeCache = new WeakMap();
@@ -47,40 +46,27 @@ export function setupAnimationLoop({
             const body = child.userData.body;
             if (!body || body.type !== CANNON.Body.DYNAMIC) continue;
 
-            // Usar half-size cacheado en lugar de setFromObject
+            // Usar half-size cacheado (DUP-008)
             let hs = _halfSizeCache.get(child);
             if (!hs) {
-                _box.setFromObject(child);
-                _box.getSize(_offMin); // reutilizamos _offMin temporalmente
-                hs = _offMin.clone().multiplyScalar(0.5);
+                hs = getHalfSize(child);
                 _halfSizeCache.set(child, hs);
             }
 
-            // Offsets simétricos desde el centro
-            _offMin.copy(hs);
-            _offMax.copy(hs);
-
-            const cx = Math.max(-HALF + _offMin.x + MARGIN, Math.min(HALF - _offMax.x - MARGIN, child.position.x));
-            const cz = Math.max(-HALF + _offMin.z + MARGIN, Math.min(HALF - _offMax.z - MARGIN, child.position.z));
-            const cy = Math.min(HEIGHT - _offMax.y - MARGIN, child.position.y);
+            // Clamp unificado X/Z/Y (DUP-003): la misma aritmética que DragManager
+            const px = child.position.x;
+            const py = child.position.y;
+            const pz = child.position.z;
+            clampToBounds(
+                child.position,
+                { half: HALF, height: HEIGHT, margin: MARGIN },
+                { x: hs.x, y: hs.y, z: hs.z },
+            );
 
             let clamped = false;
-
-            if (cx !== child.position.x) {
-                child.position.x = cx;
-                body.position.x = cx;
-                clamped = true;
-            }
-            if (cz !== child.position.z) {
-                child.position.z = cz;
-                body.position.z = cz;
-                clamped = true;
-            }
-            if (cy !== child.position.y) {
-                child.position.y = cy;
-                body.position.y = cy;
-                clamped = true;
-            }
+            if (child.position.x !== px) { body.position.x = child.position.x; clamped = true; }
+            if (child.position.y !== py) { body.position.y = child.position.y; clamped = true; }
+            if (child.position.z !== pz) { body.position.z = child.position.z; clamped = true; }
 
             // Anular toda la velocidad para evitar que siga escapando por otro eje
             if (clamped) {

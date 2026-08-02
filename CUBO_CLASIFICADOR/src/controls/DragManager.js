@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { intersectsAnyObstacle } from '../utils/CollisionHelper.js';
 import { clampToBounds } from '../utils/math.js';
+import { getHalfSize } from '../utils/geometry.js';
 
 /**
  * Maneja el arrastre de piezas con el mouse (modo kinematic en cannon-es).
@@ -35,11 +36,7 @@ export function setupDragManager(activeCameraRef, renderer, {
     const obstacleBoxes = obstacles.map(m => new THREE.Box3().setFromObject(m));
 
     // Reusables (evitar GC en el hot path)
-    const _pieceBox  = new THREE.Box3();
     const _candBox   = new THREE.Box3();
-    const _size      = new THREE.Vector3();
-    const _offMin    = new THREE.Vector3();
-    const _offMax    = new THREE.Vector3();
 
     // Half-size precacheado: se calcula en onPointerDown y se reutiliza durante el drag
     const _cachedHalfSize = new THREE.Vector3();
@@ -68,8 +65,6 @@ export function setupDragManager(activeCameraRef, renderer, {
     }
 
     // ─── Clamp a límites del cuarto ──────────────────────────────
-    /** Margen de seguridad contra las paredes del cuarto. */
-    const ROOM_MARGIN = 0.5;
 
     // ─── Colisión contra el panel del clasificador (eje Y) ──────
     /**
@@ -89,9 +84,11 @@ export function setupDragManager(activeCameraRef, renderer, {
      * @returns {THREE.Vector3}
      */
     function clampToRoom(pos) {
-        clampToBounds(pos, roomBounds, { x: _cachedHalfSize.x, z: _cachedHalfSize.z });
-        const h = roomBounds.height;
-        pos.y = Math.min(h - _cachedHalfSize.y - ROOM_MARGIN, pos.y);
+        clampToBounds(pos, roomBounds, {
+            x: _cachedHalfSize.x,
+            y: _cachedHalfSize.y,
+            z: _cachedHalfSize.z,
+        });
 
         return pos;
     }
@@ -188,10 +185,8 @@ export function setupDragManager(activeCameraRef, renderer, {
         dragging = true;
         dragStartY = selected.position.y; // capturar Y real ANTES de cualquier física
 
-        // Precachear half-size de la pieza para todo el drag (PERF-001)
-        _pieceBox.setFromObject(selected);
-        _pieceBox.getSize(_size);
-        _cachedHalfSize.copy(_size).multiplyScalar(0.5);
+        // Precachear half-size de la pieza para todo el drag (DUP-008)
+        _cachedHalfSize.copy(getHalfSize(selected));
         if (onDragStart) onDragStart();
         notifySelect(selected);
 
