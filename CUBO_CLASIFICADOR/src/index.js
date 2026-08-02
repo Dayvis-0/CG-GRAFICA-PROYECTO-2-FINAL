@@ -114,7 +114,15 @@ try {
     }
 
     // ─── Sonido de error Montessori (Tono grave seco) ───────────────────
+    // ERR-005: cooldown para que no suene en bucle si una pieza queda atascada
+    // en un hueco incorrecto (el loop de post-física se ejecuta por frame).
+    let lastErrorSoundTime = 0;
+
     function playErrorSound() {
+        const timeNow = performance.now();
+        if (timeNow - lastErrorSoundTime < 400) return;
+        lastErrorSoundTime = timeNow;
+
         try {
             const AudioCtx = window.AudioContext || window.webkitAudioContext;
             if (!AudioCtx) return;
@@ -140,8 +148,12 @@ try {
 
     // ─── Lógica del Estado del Juego (Fin de Juego / Victoria) ─────────
     let gameActive = true;
+    // Handle del timeout de victoria (ERR-001): se cancela al reiniciar para
+    // que el overlay no aparezca sobre una partida ya reiniciada.
+    let winTimeout = null;
 
     function showGameOver(won) {
+        if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
         gameActive = false;
         timer.stop();
         dragManager.setEnabled(false);
@@ -201,7 +213,8 @@ try {
 
             // Si clasificó todas las piezas -> ¡Victoria!
             if (classifiedLabels.size === HOLE_CONFIGS.length) {
-                setTimeout(() => {
+                winTimeout = setTimeout(() => {
+                    winTimeout = null;
                     showGameOver(true);
                 }, 800); // Pequeña espera para que termine de caer
             }
@@ -213,6 +226,9 @@ try {
 
     // ─── Reset de piezas ──────────────────────────────────────────────
     function resetPieces() {
+        // Cancelar una victoria pendiente antes de reiniciar (ERR-001)
+        if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
+
         for (const child of pieces.children) {
             if (!child.isMesh) continue;
             const orig = child.userData.originalPos;
@@ -494,6 +510,17 @@ try {
     console.error('❌ Error crítico al inicializar la aplicación:', err);
     const loadingPhase = document.getElementById('loading-phase');
     if (loadingPhase) {
-        loadingPhase.innerHTML = `<h2 style="color:#ff5566;">Error al cargar la aplicación 3D</h2><p style="color:#ccc; font-size:14px; margin-top:8px;">${err.message || err}</p>`;
+        // ERR-003: usar textContent en lugar de innerHTML para evitar inyección de HTML
+        loadingPhase.textContent = '';
+        const errorTitle = document.createElement('h2');
+        errorTitle.style.color = '#ff5566';
+        errorTitle.textContent = 'Error al cargar la aplicación 3D';
+        const errorMessage = document.createElement('p');
+        errorMessage.style.color = '#ccc';
+        errorMessage.style.fontSize = '14px';
+        errorMessage.style.marginTop = '8px';
+        errorMessage.textContent = err.message || String(err);
+        loadingPhase.appendChild(errorTitle);
+        loadingPhase.appendChild(errorMessage);
     }
 }
