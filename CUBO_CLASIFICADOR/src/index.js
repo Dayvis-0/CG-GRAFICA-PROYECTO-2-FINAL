@@ -304,10 +304,12 @@ try {
         console.log(`👤 Bienvenido, ${name}`);
     });
 
-    // ─── Botón del modal de fin de juego ─────────────────────────────
-    document.getElementById('game-over-btn')?.addEventListener('click', () => {
+    function restartGame() {
         const overlay = document.getElementById('game-over-overlay');
         if (overlay) overlay.classList.add('hidden');
+
+        // Liberar el flag de arrastre por si el tiempo se agotó justo mientras movía una pieza
+        draggingRef.current = false;
 
         // Reactivar controles
         gameState.setActive(true);
@@ -315,16 +317,19 @@ try {
         setControlsState(true);
 
         gameState.resetPieces();
-    });
+    }
+
+    // ─── Botón del modal de fin de juego ─────────────────────────────
+    document.getElementById('game-over-btn')?.addEventListener('click', restartGame);
 
     // ─── Botón + tecla 'R' para reiniciar ─────────────────────────────
     const resetBtn = document.getElementById('reset-btn');
-    if (resetBtn) resetBtn.onclick = gameState.resetPieces;
+    if (resetBtn) resetBtn.onclick = restartGame;
     window.addEventListener('keydown', (e) => {
         if (e.key === 'r' || e.key === 'R') {
             // No reiniciar si está escribiendo en un input
             if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-            gameState.resetPieces();
+            restartGame();
         }
     });
 
