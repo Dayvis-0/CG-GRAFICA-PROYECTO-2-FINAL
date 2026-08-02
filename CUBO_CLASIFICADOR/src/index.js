@@ -281,7 +281,7 @@ try {
     const physicsSystem = createPhysicsSystem(pieces, bodyFactory, physicsWorld);
 
     // ─── Reglas del juego ──────────────────────────────────────────────
-    const rules = createClassifierRules(panel);
+    const rules = createClassifierRules();
 
     // ─── Controles ─────────────────────────────────────────────────────
     // Obstáculos del arrastre y colisiones: SOLO paredes del clasificador (el panel Trimesh

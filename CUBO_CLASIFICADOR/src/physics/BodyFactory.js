@@ -31,8 +31,6 @@ function isInsideAnyHole(sx, sy, holeConfigs, halfCell) {
 export function createBodyFactory(world, materials) {
     /** @type {Map<THREE.Mesh, CANNON.Body>} */
     const meshToBody = new Map();
-    /** @type {Map<number, THREE.Mesh>} */
-    const bodyIdToMesh = new Map();
 
     // ─── Helpers ─────────────────────────────────────────────────
     /** Crea la forma cannon correspondiente a cada pieza según pieceType. */
@@ -51,25 +49,6 @@ export function createBodyFactory(world, materials) {
                 return new CANNON.Box(new CANNON.Vec3(
                     size.x / 2, size.y / 2, size.z / 2,
                 ));
-            }
-            case 'cone': {
-                // THREE.ConeGeometry(r, h, s): tip en +y, base en -y
-                // CANNON.Cylinder(radiusTop, radiusBottom, h, s): top en +y, bottom en -y
-                // Cono: tip arriba (radiusTop=0), base abajo (radiusBottom=r).
-                // pieceArgs = [r, h, segments]; reutilizamos el segments de Three
-                // para que la pirámide (4 lados) y el cono (32) coincidan.
-                const r = size.x / 2;
-                const h = size.y;
-                const segments = mesh.userData.pieceArgs?.[2] ?? 12;
-                return new CANNON.Cylinder(0, r, h, segments);
-            }
-            case 'cylinder': {
-                // Prisma hexagonal: Cylinder con mismo radius top y bottom.
-                // pieceArgs = [rTop, rBottom, h, radialSegments].
-                const r = size.x / 2;
-                const h = size.y;
-                const segments = mesh.userData.pieceArgs?.[3] ?? 6;
-                return new CANNON.Cylinder(r, r, h, segments);
             }
             case 'triangle': {
                 // Prisma triangular: Cylinder con 3 segmentos.
@@ -145,7 +124,6 @@ export function createBodyFactory(world, materials) {
         world.addBody(body);
 
         meshToBody.set(mesh, body);
-        bodyIdToMesh.set(body.id, mesh);
         mesh.userData.body = body; // referencia cruzada para acceso rápido
 
         return body;
@@ -266,9 +244,5 @@ export function createBodyFactory(world, materials) {
         return meshToBody.get(mesh);
     }
 
-    function getMeshFromBody(body) {
-        return bodyIdToMesh.get(body.id);
-    }
-
-    return { registerPiece, registerStatic, getBody, getMeshFromBody };
+    return { registerPiece, registerStatic, getBody };
 }

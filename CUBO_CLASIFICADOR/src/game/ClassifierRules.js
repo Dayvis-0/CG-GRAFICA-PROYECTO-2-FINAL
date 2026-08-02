@@ -5,10 +5,8 @@ import { WALL_HEIGHT } from '../data/classifierDimensions.js';
 /**
  * Reglas del juego: determina si una pieza está sobre su hueco correspondiente.
  * Separado del DragManager y de la física — pura lógica de negocio.
- *
- * @param {THREE.Mesh} panelMesh — mesh del panel superior del clasificador
  */
-export function createClassifierRules(panelMesh) {
+export function createClassifierRules() {
 
     /**
      * ¿La pieza está justo sobre el hueco que le corresponde?
@@ -16,7 +14,7 @@ export function createClassifierRules(panelMesh) {
      * @returns {boolean}
      */
     function isOverOwnHole(mesh) {
-        if (!panelMesh || !mesh || mesh.position.y < WALL_HEIGHT - 1.0) return false;
+        if (!mesh || mesh.position.y < WALL_HEIGHT - 1.0) return false;
 
         const cfg = HOLE_CONFIGS.find(c => c.label === mesh.userData.label);
         if (!cfg) return false;

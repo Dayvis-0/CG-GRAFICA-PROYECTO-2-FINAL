@@ -6,11 +6,6 @@
 <meta name="description" content="Juego interactivo 3D de clasificación de figuras geométricas con Three.js y Cannon-es">
 <title>Cubo Clasificador 3D</title>
 
-<!-- Google Fonts para diseño infantil -->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
-
 <!-- Estilos -->
 <link rel="stylesheet" href="style.css">
 
@@ -37,7 +32,6 @@
         map.imports['three/addons/'] = 'https://unpkg.com/three@0.160.0/examples/jsm/';
         map.imports['cannon-es'] = 'https://unpkg.com/cannon-es@0.20.0/dist/cannon-es.js';
         im.textContent = JSON.stringify(map);
-        document.dispatchEvent(new CustomEvent('cdn-fallback'));
     }
 })();
 </script>

@@ -6,44 +6,35 @@ import * as THREE from 'three';
  * @param {object} options
  * @param {number} options.size       - Ancho/profundidad del cuarto (default 10)
  * @param {number} options.height     - Altura del cuarto (default 5)
- * @param {function} [buildMaterial]  - Fábrica de materiales (opcional, DUP-004)
  * @returns {THREE.Group}
  */
-export function createRoom({ size = 14, height = 8 } = {}, buildMaterial = null) {
+export function createRoom({ size = 14, height = 8 } = {}) {
     const group = new THREE.Group();
     const half = size / 2;
 
     // ── Materiales PBR con sombras ──
     // Piso: Madera clara / pino suave
-    const floorMat = buildMaterial
-        ? buildMaterial('standard', 0xe3c193)
-        : new THREE.MeshStandardMaterial({
-            color: 0xe3c193,
-            roughness: 0.6,
-            metalness: 0.0,
-        });
+    const floorMat = new THREE.MeshStandardMaterial({
+        color: 0xe3c193,
+        roughness: 0.6,
+        metalness: 0.0,
+    });
 
     // Paredes: Blanco crema / vainilla cálido (DoubleSide para ver desde dentro)
-    const wallMat = buildMaterial
-        ? buildMaterial('standard', 0xfcfbf4)
-        : new THREE.MeshStandardMaterial({
-            color: 0xfcfbf4,
-            roughness: 0.9,
-            metalness: 0.0,
-            side: THREE.DoubleSide,
-        });
-    if (buildMaterial) wallMat.side = THREE.DoubleSide;
+    const wallMat = new THREE.MeshStandardMaterial({
+        color: 0xfcfbf4,
+        roughness: 0.9,
+        metalness: 0.0,
+        side: THREE.DoubleSide,
+    });
 
     // Techo: Blanco limpio
-    const ceilMat = buildMaterial
-        ? buildMaterial('standard', 0xffffff)
-        : new THREE.MeshStandardMaterial({
-            color: 0xffffff,
-            roughness: 0.9,
-            metalness: 0.0,
-            side: THREE.DoubleSide,
-        });
-    if (buildMaterial) ceilMat.side = THREE.DoubleSide;
+    const ceilMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.9,
+        metalness: 0.0,
+        side: THREE.DoubleSide,
+    });
 
     // ── Piso ──
     const floor = new THREE.Mesh(

@@ -6,7 +6,7 @@ import * as THREE from 'three';
  */
 export function createMaterialFactory(textures) {
     return function buildMaterial(type, color, textureKey, wireframe = false) {
-        const tex = textures.get ? textures.get(textureKey) : (textures[textureKey] || null);
+        const tex = textures.get(textureKey);
         const common = { color, map: tex, wireframe };
 
         switch (type) {
