@@ -20,9 +20,9 @@ export function setupInterface({
 
     // ── Puntajes por pieza clasificada ──
     const scores = {};
-    for (const cfg of HOLE_CONFIGS) {
-        scores[cfg.label] = 0;
-    }
+    piecesGroup.children.forEach(c => {
+        if (c.isMesh) scores[c.userData.label] = 0;
+    });
 
     // ── Helpers ──
     function getMeshState() {
@@ -42,9 +42,9 @@ export function setupInterface({
 
     // ── HUD: puntajes ──
     function updateHUD() {
-        for (const cfg of HOLE_CONFIGS) {
-            const el = document.getElementById(`score-${cfg.label}`);
-            if (el) el.textContent = scores[cfg.label];
+        for (const label in scores) {
+            const el = document.getElementById(`score-${label}`);
+            if (el) el.textContent = scores[label];
         }
     }
 
@@ -156,20 +156,22 @@ export function setupInterface({
 
     // ─── Construir filas de puntajes en el HUD ──
     const scoresContainer = document.getElementById('hud-scores');
-    for (const cfg of HOLE_CONFIGS) {
+    piecesGroup.children.forEach(c => {
+        if (!c.isMesh) return;
+        const label = c.userData.label;
         const row = document.createElement('div');
         row.className = 'row';
         
-        const labelText = document.createTextNode(`${cfg.label}: `);
+        const labelText = document.createTextNode(`${label}: `);
         const spanStatus = document.createElement('span');
         spanStatus.className = 'status';
-        spanStatus.id = `score-${cfg.label}`;
+        spanStatus.id = `score-${label}`;
         spanStatus.textContent = '0';
         
         row.appendChild(labelText);
         row.appendChild(spanStatus);
         scoresContainer.appendChild(row);
-    }
+    });
 
     // ─── Botón Toggle del Panel (Ajustes) ───────
     const panelEl = document.getElementById('panel');

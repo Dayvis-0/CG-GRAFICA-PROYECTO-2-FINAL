@@ -43,7 +43,8 @@ export function createGameState({
             playSuccessSound();
 
             // Si clasificó todas las piezas -> ¡Victoria!
-            if (classifiedLabels.size === HOLE_CONFIGS.length) {
+            const totalPieces = pieces.children.filter(c => c.isMesh).length;
+            if (classifiedLabels.size === totalPieces) {
                 winTimeout = setTimeout(() => {
                     winTimeout = null;
                     showGameOver(true);

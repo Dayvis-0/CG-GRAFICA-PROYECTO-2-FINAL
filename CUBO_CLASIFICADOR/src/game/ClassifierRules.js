@@ -16,7 +16,7 @@ export function createClassifierRules() {
     function isOverOwnHole(mesh) {
         if (!mesh || mesh.position.y < WALL_HEIGHT - 1.0) return false;
 
-        const cfg = HOLE_CONFIGS.find(c => c.label === mesh.userData.label);
+        const cfg = HOLE_CONFIGS.find(c => c.shape === mesh.userData.shape || c.shape === mesh.userData.pieceType || c.label === mesh.userData.label);
         if (!cfg) return false;
 
         // Convertir posición mundial a coordenadas del Shape (shape_Y → -world_Z)

@@ -13,26 +13,18 @@ export function createRoom({ size = 14, height = 8 } = {}) {
     const group = new THREE.Group();
     const half = size / 2;
 
-    // ── Materiales PBR con sombras ──
-    // Piso: Madera clara / pino suave
+    // ── Materiales PBR coloridos y armonizados ──
+    // Piso: Madera cálida brillante / parquet dorado
     const floorMat = new THREE.MeshStandardMaterial({
-        color: 0xe3c193,
-        roughness: 0.6,
-        metalness: 0.0,
+        color: 0xd99b53,
+        roughness: 0.4,
+        metalness: 0.1,
     });
 
-    // Paredes: Blanco crema / vainilla cálido (DoubleSide para ver desde dentro)
-    const wallMat = new THREE.MeshStandardMaterial({
-        color: 0xfcfbf4,
-        roughness: 0.9,
-        metalness: 0.0,
-        side: THREE.DoubleSide,
-    });
-
-    // Techo: Blanco limpio
+    // Techo: Lavanda suave / crema pastel
     const ceilMat = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: 0.9,
+        color: 0xf3e5f5,
+        roughness: 0.8,
         metalness: 0.0,
         side: THREE.DoubleSide,
     });
@@ -57,17 +49,22 @@ export function createRoom({ size = 14, height = 8 } = {}) {
     ceiling.receiveShadow = true;
     group.add(ceiling);
 
-    // ── Paredes (4: N, S, E, O) en loop ──
+    // ── Paredes (4: N, S, E, O) con paleta pastel colorida ──
     const wallGeo = new THREE.PlaneGeometry(size, height);
-    // Cada config: { rotY, x, z }
     const wallConfigs = [
-        { rotY: 0,           x: 0,    z: -half },  // north
-        { rotY: Math.PI,     x: 0,    z:  half },  // south
-        { rotY: -Math.PI / 2, x: half, z: 0 },     // east
-        { rotY:  Math.PI / 2, x: -half, z: 0 },    // west
+        { rotY: 0,           x: 0,    z: -half, color: 0xc8e6c9 }, // Norte: Verde menta pastel
+        { rotY: Math.PI,     x: 0,    z:  half, color: 0xbbdefb }, // Sur: Azul celeste pastel
+        { rotY: -Math.PI / 2, x: half, z: 0,    color: 0xe1bee7 }, // Este: Lavanda pastel
+        { rotY:  Math.PI / 2, x: -half, z: 0,    color: 0xffecb3 }, // Oeste: Amarillo crema pastel
     ];
 
     for (const cfg of wallConfigs) {
+        const wallMat = new THREE.MeshStandardMaterial({
+            color: cfg.color,
+            roughness: 0.8,
+            metalness: 0.0,
+            side: THREE.DoubleSide,
+        });
         const wall = new THREE.Mesh(wallGeo, wallMat);
         wall.position.set(cfg.x, height / 2, cfg.z);
         wall.rotation.y = cfg.rotY;

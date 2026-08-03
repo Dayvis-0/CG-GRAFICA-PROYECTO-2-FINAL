@@ -18,7 +18,7 @@ import { SNAP_DISTANCE, SNAP_MIN_HEIGHT, SNAP_ALIGN_HEIGHT } from '../data/class
  * @returns {boolean} true si la pieza fue atraída
  */
 export function snapToHole(mesh) {
-    const cfg = HOLE_CONFIGS.find(c => c.label === mesh.userData.label);
+    const cfg = HOLE_CONFIGS.find(c => c.shape === mesh.userData.shape || c.shape === mesh.userData.pieceType || c.label === mesh.userData.label);
     if (!cfg) return false;
 
     // Distancia horizontal (X/Z) al centro de su hueco correspondiente

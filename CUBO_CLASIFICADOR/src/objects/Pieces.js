@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { HOLE_CONFIGS } from '../data/holeConfigs.js';
+import { PIECE_CONFIGS } from '../data/holeConfigs.js';
 
 // ── Fábrica de geometrías según el tipo de pieza ──
 const GEO_BUILDERS = {
@@ -37,19 +37,18 @@ const GEO_BUILDERS = {
 };
 
 /**
- * Crea las 4 piezas geométricas que encajan en los huecos del clasificador.
- * Los tamaños se definen en data/holeConfigs.js (fuente única).
+ * Crea las piezas geométricas que encajan en los huecos del clasificador.
  * @returns {THREE.Group}
  */
 export function createPieces() {
     const group = new THREE.Group();
 
     const mat = new THREE.MeshStandardMaterial({
-        roughness: 0.4,
-        metalness: 0.3,
+        roughness: 0.3,
+        metalness: 0.2,
     });
 
-    for (const cfg of HOLE_CONFIGS) {
+    for (const cfg of PIECE_CONFIGS) {
         const builder = GEO_BUILDERS[cfg.pieceType];
         if (!builder) {
             console.warn(`Unknown piece type: ${cfg.pieceType}`);
@@ -62,6 +61,7 @@ export function createPieces() {
         mesh.castShadow = true;
         mesh.receiveShadow = true;
         mesh.userData.label = cfg.label;
+        mesh.userData.shape = cfg.shape;
         mesh.userData.pieceType = cfg.pieceType;
         mesh.userData.pieceArgs = cfg.pieceArgs;
         mesh.userData.minY = cfg.pieceY;
