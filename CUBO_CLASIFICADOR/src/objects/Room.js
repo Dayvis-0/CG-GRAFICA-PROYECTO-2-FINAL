@@ -71,8 +71,8 @@ export function createRoom({ size = 14, height = 8 } = {}) {
         const wall = new THREE.Mesh(wallGeo, wallMat);
         wall.position.set(cfg.x, height / 2, cfg.z);
         wall.rotation.y = cfg.rotY;
-        wall.castShadow = true;
-        wall.receiveShadow = true;
+        wall.castShadow = false;
+        wall.receiveShadow = false;
         group.add(wall);
     }
 

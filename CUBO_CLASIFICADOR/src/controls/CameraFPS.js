@@ -123,6 +123,8 @@ export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], dra
         if (enabled) {
             updateMovement();
         }
+        clampToBounds(camera.position, roomBounds);
+        camera.position.y = Math.max(yMin, Math.min(yMax, camera.position.y));
     }
 
     // ─── Dispose ─────────────────────────────────────────────────

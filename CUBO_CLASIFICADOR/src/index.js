@@ -24,7 +24,8 @@ import { snapToHole }            from './game/SnapHelper.js';
 import { teleportPiece }         from './game/pieceUtils.js';
 import { playErrorSound }        from './utils/audio.js';
 import { HOLE_CONFIGS }         from './data/holeConfigs.js';
-import { WALL_HEIGHT, PANEL_DEPTH, OUTER } from './data/classifierDimensions.js';
+import { WALL_HEIGHT, PANEL_DEPTH, OUTER, ROOM_MARGIN } from './data/classifierDimensions.js';
+import { clampToBounds }        from './utils/math.js';
 import { OrbitControls }        from 'three/addons/controls/OrbitControls.js';
 
 try {
@@ -132,7 +133,7 @@ try {
     orbitControls.dampingFactor = 0.05;
     orbitControls.maxPolarAngle = Math.PI / 2 - 0.05; // Evita bajar del piso
     orbitControls.minDistance = 3;
-    orbitControls.maxDistance = 15;
+    orbitControls.maxDistance = 8.5;
     orbitControls.target.set(0, 1.5, 0); // Apunta al cubo clasificador
     orbitControls.update();
 
@@ -271,6 +272,8 @@ try {
                 } else {
                     fpsControls.update();
                 }
+                clampToBounds(cam.position, room.userData.bounds);
+                cam.position.y = Math.max(ROOM_MARGIN, Math.min(room.userData.bounds.height - ROOM_MARGIN, cam.position.y));
             }
         },
         pieces,

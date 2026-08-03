@@ -2,7 +2,6 @@ import * as CANNON from 'cannon-es';
 import * as THREE from 'three';
 import { PHYSICS_CONSTANTS } from '../data/physicsConstants.js';
 import { getHalfSize } from '../utils/geometry.js';
-import { TRIANGLE_QUAT_OFFSET } from './triangleQuat.js';
 import { buildPanelGrid } from './PanelGridBuilder.js';
 
 /**
@@ -28,11 +27,26 @@ export function createBodyFactory(world, materials) {
                 return new CANNON.Box(new CANNON.Vec3(hs.x, hs.y, hs.z));
             }
             case 'triangle': {
-                // Prisma triangular: Cylinder con 3 segmentos.
-                // pieceArgs = [r, depth]; usamos radius igual top y bottom.
+                // Prisma triangular ConvexPolyhedron exacto matching Three.js ExtrudeGeometry 1:1
                 const r = hs.x;
-                const h = hs.y * 2;
-                return new CANNON.Cylinder(r, r, h, 3);
+                const h = hs.y;
+                const s3 = Math.sqrt(3) / 2;
+                const vertices = [
+                    new CANNON.Vec3(0, h, -r),
+                    new CANNON.Vec3(r * s3, h, r / 2),
+                    new CANNON.Vec3(-r * s3, h, r / 2),
+                    new CANNON.Vec3(0, -h, -r),
+                    new CANNON.Vec3(r * s3, -h, r / 2),
+                    new CANNON.Vec3(-r * s3, -h, r / 2),
+                ];
+                const faces = [
+                    [0, 1, 2],
+                    [3, 5, 4],
+                    [0, 1, 4, 3],
+                    [1, 2, 5, 4],
+                    [2, 0, 3, 5],
+                ];
+                return new CANNON.ConvexPolyhedron({ vertices, faces });
             }
             case 'rhombus': {
                 // Reducimos el tamaño de la caja de colisión física (0.62) para que pase holgadamente
@@ -61,21 +75,9 @@ export function createBodyFactory(world, materials) {
     function registerPiece(mesh, mass = 1) {
         const shape = buildPieceShape(mesh);
 
-        // El CANNON.Cylinder(3) genera el 1er vértice en +X, pero el triángulo
-        // visual (Pieces.js) tiene el "top" apuntando a -Z tras rotateX(-PI/2).
-        // Aplicamos el desfase centralizado (DUP-002): sin él, el collision body
-        // entra desalineado al hueco y sus vértices chocan contra la grilla.
-        let quat;
-        if (mesh.userData.pieceType === 'triangle') {
-            quat = new CANNON.Quaternion(
-                TRIANGLE_QUAT_OFFSET.x, TRIANGLE_QUAT_OFFSET.y,
-                TRIANGLE_QUAT_OFFSET.z, TRIANGLE_QUAT_OFFSET.w,
-            );
-        } else {
-            quat = new CANNON.Quaternion(
-                mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w,
-            );
-        }
+        const quat = new CANNON.Quaternion(
+            mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w,
+        );
 
         const body = new CANNON.Body({
             mass,

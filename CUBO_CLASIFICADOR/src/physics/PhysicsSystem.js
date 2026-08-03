@@ -1,5 +1,4 @@
 import * as CANNON from 'cannon-es';
-import { quatMeshToBody, quatBodyToMesh } from './triangleQuat.js';
 
 /**
  * Avanza el mundo cannon-es por frame y sincroniza meshes con sus bodies.
@@ -42,16 +41,10 @@ export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
             body.type = CANNON.Body.DYNAMIC;
             body.position.set(mesh.position.x, mesh.position.y, mesh.position.z);
             
-            if (mesh.userData.pieceType === 'triangle') {
-                // Al pasar a dinámico, sumamos los +90 grados en Y requeridos por el cuerpo físico (DUP-002)
-                const physQuat = quatMeshToBody(mesh.quaternion);
-                body.quaternion.set(physQuat.x, physQuat.y, physQuat.z, physQuat.w);
-            } else {
-                body.quaternion.set(
-                    mesh.quaternion.x, mesh.quaternion.y,
-                    mesh.quaternion.z, mesh.quaternion.w,
-                );
-            }
+            body.quaternion.set(
+                mesh.quaternion.x, mesh.quaternion.y,
+                mesh.quaternion.z, mesh.quaternion.w,
+            );
             body.force.setZero();
             body.torque.setZero();
 
@@ -171,18 +164,12 @@ export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
 
             child.position.set(body.position.x, body.position.y, body.position.z);
             
-            if (child.userData.pieceType === 'triangle') {
-                // Deshacer el desfase de +90 grados en Y del cuerpo físico
-                // aplicando -90 grados en Y al mesh visual para mantenerlo simétrico (DUP-002)
-                child.quaternion.copy(quatBodyToMesh(body.quaternion));
-            } else {
-                child.quaternion.set(
-                    body.quaternion.x,
-                    body.quaternion.y,
-                    body.quaternion.z,
-                    body.quaternion.w
-                );
-            }
+            child.quaternion.set(
+                body.quaternion.x,
+                body.quaternion.y,
+                body.quaternion.z,
+                body.quaternion.w
+            );
         }
     }
 
