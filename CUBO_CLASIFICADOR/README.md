@@ -55,6 +55,9 @@ CUBO_CLASIFICADOR/
 └── src/
     ├── index.js              # Orquestador: conecta todos los modulos con try-catch
     │
+    ├── assets/                # Assets locales (textura de madera .webp del clasificador)
+    │   └── wood_color.webp       # Textura de madera Montessori (800x534) cargada con TextureLoader
+    │
     ├── core/                  # Nucleo Three.js
     │   ├── SceneManager.js       # Escena con fondo 0x141416
     │   ├── CameraManager.js     # PerspectiveCamera 70 FOV, posicion (5, 1.6, 5)
@@ -113,6 +116,43 @@ CUBO_CLASIFICADOR/
         ├── classifierDimensions.js # Constantes: OUTER=4, WALL_HEIGHT=2.5, PANEL_DEPTH=0.5 + snap (SNAP_*)
         ├── physicsConstants.js     # Constantes de fisica Cannon-es (restitution, friction, damping)
         └── gameConfig.js           # Config de juego: duracion del timer y rango (ARQ-005)
+```
+
+### Estructura simplificada
+
+```
+CUBO_CLASIFICADOR/
+├── index.html                     # Punto de entrada: pagina, import map y panel de control
+├── style.css                      # Tema oscuro con acentos cian
+├── fallback.js                    # Fallback de CDN (SEC-002): si jsdelivr falla, reescribe el import map a unpkg
+└── src/
+    ├── index.js                   # Punto de arranque de la aplicacion
+    ├── core/                      # Three.js base: escena, camara y renderer
+    │   ├── SceneManager.js  CameraManager.js  RendererManager.js
+    ├── objects/                   # Objetos 3D: el cuarto, el clasificador y las piezas
+    │   ├── Room.js  Classifier.js  Pieces.js
+    ├── lights/                    # Las 3 luces: ambiental, techo y direccional con sombras
+    │   ├── Lights.js
+    ├── textures/                  # Texturas generadas por codigo (rayas, lunares, madera, etc.)
+    │   ├── TextureFactory.js
+    ├── materials/                 # Materiales de las piezas (lambert, phong, standard)
+    │   ├── MaterialFactory.js
+    ├── controls/                  # Camara FPS, movimiento del jugador y arrastre de piezas
+    │   ├── InputManager.js  CameraFPS.js  DragManager.js
+    ├── physics/                   # Fisica del juego: gravedad, colisiones y cuerpos rigidos
+    │   ├── PhysicsWorld.js  BodyFactory.js  PhysicsSystem.js  PanelGridBuilder.js  triangleQuat.js
+    ├── game/                      # Reglas del juego: verificar huecos, puntaje y tiempo
+    │   ├── ClassifierRules.js  Timer.js  GameState.js  SnapHelper.js  pieceUtils.js
+    ├── ui/                        # Interfaz en pantalla: HUD y panel de controles
+    │   ├── Interface.js
+    ├── animations/                # Bucle que actualiza y dibuja el juego en cada frame
+    │   ├── AnimationLoop.js
+    ├── utils/                     # Herramientas de ayuda reutilizadas por varios modulos
+    │   ├── ResizeHandler.js  CollisionHelper.js  HoleDetector.js  math.js  geometry.js  audio.js  holeShapes.js
+    ├── assets/                    # Assets locales
+    │   ├── wood_color.webp
+    └── data/                      # Datos de configuracion (tamanos, colores, constantes)
+        ├── holeConfigs.js  classifierDimensions.js  physicsConstants.js  gameConfig.js
 ```
 
 ---
