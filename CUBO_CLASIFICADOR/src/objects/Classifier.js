@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+snapHelper errorE from 'three';
 import { HOLE_CONFIGS } from '../data/holeConfigs.js';
 import {
     OUTER,

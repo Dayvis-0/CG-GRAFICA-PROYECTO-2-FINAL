@@ -29,7 +29,6 @@ export function snapToHole(mesh) {
     // Solo si está en rango cercano (SNAP_DISTANCE) y arriba de la tapa
     if (dist < SNAP_DISTANCE && mesh.position.y > SNAP_MIN_HEIGHT) {
         // Posición centrada + rotación simétrica perfecta, elevada para centrarse.
-        // teleportPiece resetea velocidades y aplica el desfase del triángulo (DUP-002).
         teleportPiece(mesh, new THREE.Vector3(cfg.cx, SNAP_ALIGN_HEIGHT, -cfg.cy));
         console.log(`🧲 Pieza ${mesh.userData.label} atraída y alineada simétricamente a la altura correcta.`);
         return true;
