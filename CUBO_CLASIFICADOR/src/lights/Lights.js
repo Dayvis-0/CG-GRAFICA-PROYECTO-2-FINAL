@@ -12,12 +12,16 @@ export function createLights(scene) {
     lights.ambient = new THREE.AmbientLight(0xfff8e7, 0.55);
     scene.add(lights.ambient);
 
-    // Luz de techo tipo foco
-    lights.ceiling = new THREE.PointLight(0xffffff, 1.3, 25);
+    // Luz de techo en el centro (desactivada por defecto)
+    lights.ceiling = new THREE.PointLight(0xffffff, 3.5, 35);
     lights.ceiling.position.set(0, 7.5, 0);
+    lights.ceiling.castShadow = true;
+    lights.ceiling.shadow.mapSize.set(1024, 1024);
+    lights.ceiling.shadow.bias = -0.002;
+    lights.ceiling.visible = false;
     scene.add(lights.ceiling);
 
-    // Luz direccional principal (con sombras)
+    // Luz direccional principal con sombras (encendida por defecto)
     lights.dir = new THREE.DirectionalLight(0xfff0dd, 0.8);
     lights.dir.position.set(7, 12, 9);
     lights.dir.castShadow = true;
@@ -28,6 +32,7 @@ export function createLights(scene) {
     lights.dir.shadow.camera.bottom = -8;
     lights.dir.shadow.camera.near   = 0.5;
     lights.dir.shadow.camera.far    = 25;
+    lights.dir.visible = true;
     scene.add(lights.dir);
 
     return lights;
