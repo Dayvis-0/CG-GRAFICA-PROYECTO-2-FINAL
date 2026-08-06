@@ -2,6 +2,7 @@ import { HOLE_CONFIGS } from '../data/holeConfigs.js';
 import { WALL_HEIGHT, OUTER } from '../data/classifierDimensions.js';
 import { playSuccessSound } from '../utils/audio.js';
 
+// Mantiene el estado del juego: puntaje, piezas clasificadas y fin de partida.
 export function createGameState({
     pieces,
     rules,
@@ -17,9 +18,11 @@ export function createGameState({
     let winTimeout = null;
     const classifiedLabels = new Set();
 
+    // Intenta clasificar la pieza si está sobre el hueco correcto y reproduce sonido de éxito.
     function tryClassify(mesh) {
         if (!mesh || classifiedLabels.has(mesh.userData.label)) return false;
         
+        // Verifica si la pieza está sobre su propio hueco
         if (rules.isOverOwnHole(mesh)) {
             classifiedLabels.add(mesh.userData.label);
             onClassified(mesh.userData.label);
@@ -37,11 +40,13 @@ export function createGameState({
         return false;
     }
 
+    // Devuelve una pieza a su posición inicial fuera del cubo.
     function expelPiece(mesh) {
         const orig = mesh.userData.originalPos;
         if (orig) teleportPiece(mesh, orig);
     }
 
+    // Comprueba si la pieza ingresó al cubo clasificador y valida si es acierto o infracción.
     function processPiece(child) {
         if (!child.isMesh || classifiedLabels.has(child.userData.label)) return 'none';
 
@@ -58,6 +63,7 @@ export function createGameState({
         return 'none';
     }
 
+    // Finaliza la partida mostrando si el jugador ganó o perdió por tiempo.
     function showGameOver(won) {
         if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
         gameActive = false;
@@ -67,6 +73,7 @@ export function createGameState({
         onGameOver(won);
     }
 
+    // Reinicia todas las piezas a sus posiciones iniciales fuera del cubo.
     function resetPieces() {
         if (winTimeout) { clearTimeout(winTimeout); winTimeout = null; }
 
@@ -81,6 +88,7 @@ export function createGameState({
         timer.reset();
     }
 
+    // Expulsa una pieza específica o todas las piezas que hayan ingresado al cubo clasificador.
     function ejectPiece(targetLabel = null) {
         let count = 0;
         for (const child of pieces.children) {

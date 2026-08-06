@@ -3,6 +3,7 @@ import { clampToBounds } from '../utils/math.js';
 import { getHalfSize } from '../utils/geometry.js';
 import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 
+// Inicia el bucle continuo de animación que renderiza la imagen 60 veces por segundo.
 export function setupAnimationLoop({
     scene,
     renderer,
@@ -21,6 +22,7 @@ export function setupAnimationLoop({
 
     const _halfSizeCache = new WeakMap();
 
+    // Mantiene todas las piezas dentro de los límites de las paredes físicas del cuarto.
     function clampToRoomBounds(draggedMesh) {
         for (const child of pieces.children) {
             if (!child.isMesh || child === draggedMesh) continue;
@@ -59,6 +61,7 @@ export function setupAnimationLoop({
 
     let lastTime = performance.now();
 
+    // Función principal que se ejecuta en cada fotograma para actualizar la física y redibujar el juego.
     function animate(now) {
         requestAnimationFrame(animate);
 

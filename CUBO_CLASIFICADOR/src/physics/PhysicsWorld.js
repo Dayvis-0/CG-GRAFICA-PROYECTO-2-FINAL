@@ -1,6 +1,7 @@
 import * as CANNON from 'cannon-es';
 import { PHYSICS_CONSTANTS } from '../data/physicsConstants.js';
 
+// Crea el mundo virtual de física donde se aplican la gravedad y los choques.
 export function createPhysicsWorld() {
     const world = new CANNON.World({ gravity: new CANNON.Vec3(0, -35, 0) });
     
@@ -15,6 +16,7 @@ export function createPhysicsWorld() {
         ground: new CANNON.Material('ground'),
     };
 
+    // Configura cómo rebotan y deslizan las piezas al chocar contra las paredes, el suelo o entre sí
     world.addContactMaterial(new CANNON.ContactMaterial(materials.piece, materials.piece, {
         friction: PHYSICS_CONSTANTS.PIECE_FRICTION,
         restitution: PHYSICS_CONSTANTS.DEFAULT_RESTITUTION,
@@ -35,6 +37,7 @@ export function createPhysicsWorld() {
         restitution: PHYSICS_CONSTANTS.LOW_RESTITUTION,
     }));
 
+    // Avanza la simulación del mundo físico en cada paso del tiempo.
     function step(dt) {
         world.fixedStep(1 / 240, dt);
     }

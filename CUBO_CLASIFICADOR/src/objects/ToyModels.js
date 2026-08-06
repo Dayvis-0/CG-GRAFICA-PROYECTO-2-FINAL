@@ -1,11 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
-/**
- * Carga e instancia juguetes en la escena.
- * @param {function(THREE.Object3D): void} [onToyLoaded] - Callback invocado por cada juguete cargado.
- * @returns {THREE.Group}
- */
+// Carga todos los modelos 3D decorativos (patito, camión, tren, osito y pelota) y los ubica en el cuarto.
 export function createToyModels(onToyLoaded) {
     const group = new THREE.Group();
     const loader = new GLTFLoader();

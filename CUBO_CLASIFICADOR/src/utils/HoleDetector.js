@@ -2,14 +2,9 @@ import { pointInTriangle } from './geometry.js';
 
 export const HOLE_TOLERANCE = 0.1;
 
-/**
- * @param {number} sx
- * @param {number} sy
- * @param {object} cfg    — Configuración de la forma
- * @param {number} margin — Margen de expansión/tolerancia de la forma
- * @returns {boolean}
- */
+// Comprueba matemáticamente si un punto en 2D está dentro de la figura geométrica (círculo, cuadrado, triángulo o rombo).
 export function isPointInsideShape(sx, sy, cfg, margin) {
+    // Evalúa la posición según la fórmula geométrica de cada tipo de agujero
     switch (cfg.shape) {
         case 'circle': {
             const dx = sx - cfg.cx, dy = sy - cfg.cy;
@@ -45,12 +40,7 @@ export function isPointInsideShape(sx, sy, cfg, margin) {
     }
 }
 
-/**
- * @param {number} sx
- * @param {number} sy
- * @param {object} cfg — entrada de HOLE_CONFIGS
- * @returns {boolean}
- */
+// Determina si una pieza cayó dentro del agujero aplicando un margen de tolerancia.
 export function isInsideHole(sx, sy, cfg) {
     return isPointInsideShape(sx, sy, cfg, HOLE_TOLERANCE);
 }

@@ -29,6 +29,7 @@ import { WALL_HEIGHT, PANEL_DEPTH, OUTER, ROOM_MARGIN } from './data/classifierD
 import { clampToBounds } from './utils/math.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+// Punto de entrada principal que inicializa la escena 3D, controles, física e interfaz del juego.
 try {
     let currentMode = 'experto';
     let fpsControls;

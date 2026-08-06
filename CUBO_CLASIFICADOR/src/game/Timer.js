@@ -1,5 +1,6 @@
 import { TIMER_CONFIG } from '../data/gameConfig.js';
 
+// Maneja el cronómetro del juego, descontando segundos hasta llegar a cero.
 export function createTimer(onTimeUp) {
     const timerEl      = document.getElementById('timer');
     const timerDisplay = document.getElementById('timer-display');
@@ -10,12 +11,14 @@ export function createTimer(onTimeUp) {
     let interval = null;
     let started  = false;
 
+    // Actualiza el texto visual del cronómetro en la pantalla en formato MM:SS.
     function updateDisplay() {
         const mm = String(minutes).padStart(2, '0');
         const ss = String(seconds).padStart(2, '0');
         timerDisplay.textContent = `${mm}:${ss}`;
     }
 
+    // Inicia la cuenta regresiva del tiempo.
     function start() {
         if (running || started) return;
         started = true;
@@ -40,6 +43,7 @@ export function createTimer(onTimeUp) {
         }, 1000);
     }
 
+    // Detiene el tiempo y reinicia el reloj al valor original.
     function reset() {
         if (interval) clearInterval(interval);
         running = false;
@@ -51,6 +55,7 @@ export function createTimer(onTimeUp) {
         updateDisplay();
     }
 
+    // Pausa la cuenta regresiva del tiempo.
     function stop() {
         if (interval) clearInterval(interval);
         running = false;

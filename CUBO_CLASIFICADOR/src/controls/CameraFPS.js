@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { isPointInsideBox } from '../utils/CollisionHelper.js';
 import { clampToBounds } from '../utils/math.js';
 
+// Permite mover la cámara en primera persona usando el mouse para mirar y las teclas WASD para caminar.
 export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], draggingRef = { current: false }, inputManager) {
     const { height, margin } = roomBounds;
     const yMin = margin;
@@ -32,6 +33,7 @@ export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], dra
     };
     document.addEventListener('mousemove', _onMouseMove);
 
+    // Aplica la orientación de giro calculada a la cámara en el espacio 3D.
     function updateCameraRotation() {
         camera.rotation.order = 'YXZ';
         camera.rotation.y = yaw;
@@ -45,6 +47,7 @@ export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], dra
     const target = new THREE.Vector3();
     const COLLIDE_MARGIN = 0.35;
 
+    // Comprueba si la cámara choca con algún objeto u obstáculo para no atravesarlo.
     function isBlocked(pos) {
         for (let i = 0; i < obstacles.length; i++) {
             const obstacle = obstacles[i];
@@ -55,6 +58,7 @@ export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], dra
         return false;
     }
 
+    // Calcula el desplazamiento de la cámara cuando el jugador presiona WASD.
     function updateMovement() {
         if (!enabled) return;
 

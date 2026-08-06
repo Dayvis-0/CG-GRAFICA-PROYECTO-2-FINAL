@@ -3,6 +3,7 @@ import { intersectsAnyObstacle } from '../utils/CollisionHelper.js';
 import { clampToBounds } from '../utils/math.js';
 import { getHalfSize } from '../utils/geometry.js';
 
+// Configura la interacción del mouse para poder tomar y arrastrar las piezas por el escenario.
 export function setupDragManager(activeCameraRef, renderer, {
     piecesGroup,
     physicsSystem,
@@ -29,6 +30,7 @@ export function setupDragManager(activeCameraRef, renderer, {
     const _candBox = new THREE.Box3();
     const _cachedHalfSize = new THREE.Vector3();
 
+    // Verifica si la posición deseada de la pieza choca con el cubo clasificador u otros obstáculos.
     function overlapsClassifier(pos) {
         if (obstacles.length === 0) return false;
         _candBox.min.set(pos.x - _cachedHalfSize.x, pos.y - _cachedHalfSize.y, pos.z - _cachedHalfSize.z);
@@ -37,11 +39,13 @@ export function setupDragManager(activeCameraRef, renderer, {
         return intersectsAnyObstacle(_candBox, obstacleBoxes);
     }
 
+    // Revisa si la pieza se encuentra directamente en la zona superior encima del cubo clasificador.
     function isOverClassifier(pos) {
         const margin = 0.2;
         return Math.abs(pos.x) < classifierHalf + margin && Math.abs(pos.z) < classifierHalf + margin;
     }
 
+    // Mantiene la pieza dentro de los límites de las paredes del cuarto.
     function clampToRoom(pos) {
         clampToBounds(pos, roomBounds, { x: _cachedHalfSize.x, y: _cachedHalfSize.y, z: _cachedHalfSize.z });
         return pos;
@@ -54,6 +58,7 @@ export function setupDragManager(activeCameraRef, renderer, {
         return pos;
     }
 
+    // Evita que la pieza atraviese paredes u obstáculos al moverse.
     function clampMovement(pos, from) {
         const guarded = from.clone();
         const axes = ['x', 'z', 'y'];
@@ -76,11 +81,13 @@ export function setupDragManager(activeCameraRef, renderer, {
         return piecesGroup.children.filter(c => c.isMesh);
     }
 
+    // Detecta cuando el usuario hace clic sobre una pieza para agarrarla y arrastrarla.
     function onPointerDown(e) {
         if (!enabled) return;
         pointer.x =  (e.clientX / window.innerWidth)  * 2 - 1;
         pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
+        // Selecciona la pieza bajo el cursor usando un rayo de cámara y activa el modo arrastre
         raycaster.setFromCamera(pointer, activeCameraRef.current);
         const hits = raycaster.intersectObjects(getPieceMeshes(), false);
         if (hits.length === 0) return;
@@ -106,11 +113,13 @@ export function setupDragManager(activeCameraRef, renderer, {
         renderer.domElement.style.cursor = 'grabbing';
     }
 
+    // Actualiza la posición 3D de la pieza siguiendo el cursor del mouse en pantalla.
     function onPointerMove(e) {
         if (!dragging || !selected) return;
         pointer.x =  (e.clientX / window.innerWidth)  * 2 - 1;
         pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 
+        // Proyecta la posición del mouse sobre el plano 3D y ajusta colisiones de arrastre
         raycaster.setFromCamera(pointer, activeCameraRef.current);
         raycaster.ray.intersectPlane(dragPlane, target);
 
@@ -135,6 +144,7 @@ export function setupDragManager(activeCameraRef, renderer, {
         selected.position.copy(newPos);
     }
 
+    // Suelta la pieza y reactiva la gravedad física al soltar el clic del mouse.
     function onPointerUp(e) {
         const releasedMesh = selected;
         if (selected) {

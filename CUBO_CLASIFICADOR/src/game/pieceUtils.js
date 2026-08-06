@@ -1,3 +1,4 @@
+// Teletransporta instantáneamente una pieza y su cuerpo físico a una coordenada dada.
 export function teleportPiece(mesh, pos) {
     mesh.position.copy(pos);
     mesh.quaternion.identity();

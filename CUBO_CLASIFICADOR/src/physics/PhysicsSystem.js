@@ -1,11 +1,13 @@
 import * as CANNON from 'cannon-es';
 
+// Gestiona la interacción física de las piezas, sincronizando sus posiciones y lanzamientos.
 export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
     const kinematicPieces = new Set();
     const DRAG_TRAIL_LEN = 8;
     const MAX_RELEASE_SPEED = 5;
     const dragTrail = [];
 
+    // Cambia una pieza entre modo controlado manualmente (al arrastrar) o modo físico dinámico (al soltar).
     function setKinematic(mesh, kinematic) {
         const body = bodyFactory.getBody(mesh);
         if (!body) return;
@@ -24,6 +26,7 @@ export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
             body.force.setZero();
             body.torque.setZero();
 
+            // Calcula la velocidad de impulso al soltar la pieza para que mantenga el impulso del lanzamiento
             if (dragTrail.length >= 3) {
                 const first = dragTrail[0];
                 const last  = dragTrail[dragTrail.length - 1];
@@ -59,6 +62,7 @@ export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
         }
     }
 
+    // Mueve la pieza a una nueva posición mientras el usuario la arrastra.
     function setKinematicPosition(mesh, pos) {
         const body = bodyFactory.getBody(mesh);
         if (!body) return;
@@ -96,6 +100,7 @@ export function createPhysicsSystem(piecesGroup, bodyFactory, physicsWorld) {
         }
     }
 
+    // Actualiza la posición visual de todas las piezas según el cálculo del motor de física.
     function update(dt, draggedMesh) {
         physicsWorld.step(dt);
 

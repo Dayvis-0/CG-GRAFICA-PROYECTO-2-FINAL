@@ -1,3 +1,4 @@
+// Configura el panel de control de la pantalla para cambiar materiales, luces y expulsar piezas.
 export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiece }) {
     const labelToMesh = {};
     piecesGroup.children.forEach(c => {
@@ -11,6 +12,7 @@ export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiec
         if (c.isMesh) scores[c.userData.label] = 0;
     });
 
+    // Obtiene la configuración actual de material y textura de la pieza seleccionada.
     function getMeshState() {
         if (!selectedKey) return null;
         const mesh = labelToMesh[selectedKey];
@@ -26,6 +28,7 @@ export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiec
         };
     }
 
+    // Actualiza los números del contador de piezas en la pantalla.
     function updateHUD() {
         for (const label in scores) {
             const el = document.getElementById(`score-${label}`);
@@ -52,6 +55,7 @@ export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiec
     const _texBtns = [...document.querySelectorAll('.texbtn')];
     const _wfBtn = document.getElementById('wf-btn');
 
+    // Resalta los botones del menú según la pieza que esté seleccionada.
     function updatePanelSelection() {
         const st = getMeshState();
         _objBtns.forEach(b => b.classList.toggle('active', b.dataset.key === selectedKey));
@@ -75,6 +79,7 @@ export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiec
         }
     }
 
+    // Aplica el nuevo material o textura a la pieza seleccionada.
     function applyState(st) {
         if (!st) return;
         const oldMat = st.mesh.material;
@@ -93,6 +98,7 @@ export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiec
         applyState(st);
     }
 
+    // Registra cuál pieza fue seleccionada al hacerle clic.
     function onPieceSelected(mesh) {
         if (mesh && mesh.userData.label && labelToMesh[mesh.userData.label]) {
             selectedKey = mesh.userData.label;
@@ -102,6 +108,7 @@ export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiec
         updatePanelSelection();
     }
 
+    // Selecciona o deselecciona una pieza usando su botón en el menú.
     function selectByLabel(label) {
         selectedKey = selectedKey === label ? null : label;
         updatePanelSelection();
