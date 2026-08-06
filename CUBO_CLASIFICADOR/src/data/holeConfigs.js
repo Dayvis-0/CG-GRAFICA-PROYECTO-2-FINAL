@@ -61,78 +61,42 @@ export const HOLE_CONFIGS = [
     },
 ];
 
-/** Lista extendida de 8 piezas coloridas para el juego */
+/** 4 piezas, una por cada hueco del clasificador */
 export const PIECE_CONFIGS = [
     {
-        label: 'Esfera 1',
+        label: 'Esfera',
         shape: 'circle',
         pieceType: 'sphere',
         pieceArgs: [0.55, 32, 32],
-        pieceColor: 0xff4081, // Coral rosa radiante
+        pieceColor: 0xff4081, // Coral rosa
         piecePos: { x: 4.2, z: 1.5 },
         pieceY: 0.55,
     },
     {
-        label: 'Esfera 2',
-        shape: 'circle',
-        pieceType: 'sphere',
-        pieceArgs: [0.55, 32, 32],
-        pieceColor: 0xab47bc, // Violeta magenta brillante
-        piecePos: { x: -4.2, z: -1.5 },
-        pieceY: 0.55,
-    },
-    {
-        label: 'Cubo 1',
+        label: 'Cubo',
         shape: 'square',
         pieceType: 'box',
         pieceArgs: [0.9, 0.9, 0.9],
-        pieceColor: 0x00b0ff, // Azul cian neón
+        pieceColor: 0x00b0ff, // Azul cian
         piecePos: { x: 2.5, z: 4.2 },
         pieceY: 0.45,
     },
     {
-        label: 'Cubo 2',
-        shape: 'square',
-        pieceType: 'box',
-        pieceArgs: [0.9, 0.9, 0.9],
-        pieceColor: 0x1de9b6, // Turquesa esmeralda
-        piecePos: { x: -2.5, z: -4.2 },
-        pieceY: 0.45,
-    },
-    {
-        label: 'Triángulo 1',
+        label: 'Triángulo',
         shape: 'triangle',
         pieceType: 'triangle',
         pieceArgs: [0.65, 0.9],
-        pieceColor: 0x76ff03, // Verde lima brillante
+        pieceColor: 0x76ff03, // Verde lima
         piecePos: { x: -3.8, z: 3.2 },
         pieceY: 0.45,
     },
     {
-        label: 'Triángulo 2',
-        shape: 'triangle',
-        pieceType: 'triangle',
-        pieceArgs: [0.65, 0.9],
-        pieceColor: 0xffd600, // Amarillo sol radiante
-        piecePos: { x: 3.8, z: -3.2 },
-        pieceY: 0.45,
-    },
-    {
-        label: 'Rombo 1',
+        label: 'Rombo',
         shape: 'rhombus',
         pieceType: 'rhombus',
         pieceArgs: [1.0, 0.7, 0.9],
-        pieceColor: 0xff6d00, // Naranja fuego radiante
+        pieceColor: 0xff6d00, // Naranja fuego
         piecePos: { x: 3.2, z: -4.5 },
-        pieceY: 0.45,
-    },
-    {
-        label: 'Rombo 2',
-        shape: 'rhombus',
-        pieceType: 'rhombus',
-        pieceArgs: [1.0, 0.7, 0.9],
-        pieceColor: 0xf50057, // Fucsia intenso
-        piecePos: { x: -3.2, z: 4.5 },
         pieceY: 0.45,
     },
 ];

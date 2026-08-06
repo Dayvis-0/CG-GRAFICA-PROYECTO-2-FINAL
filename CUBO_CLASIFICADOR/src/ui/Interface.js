@@ -1,4 +1,3 @@
-import { HOLE_CONFIGS } from '../data/holeConfigs.js';
 
 /**
  * Configura el HUD y panel de control del Cubo Clasificador.
