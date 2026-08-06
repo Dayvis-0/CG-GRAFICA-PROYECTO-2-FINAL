@@ -40,11 +40,11 @@ export function createBodyFactory(world, materials) {
                     new CANNON.Vec3(-r * s3, -h, r / 2),
                 ];
                 const faces = [
-                    [0, 1, 2],
-                    [3, 5, 4],
-                    [0, 1, 4, 3],
-                    [1, 2, 5, 4],
-                    [2, 0, 3, 5],
+                    [0, 2, 1],    // Cara superior (normal apuntando a +Y)
+                    [3, 4, 5],    // Cara inferior (normal apuntando a -Y)
+                    [1, 4, 3, 0], // Cara lateral 1 (CCW desde fuera)
+                    [2, 5, 4, 1], // Cara lateral 2 (CCW desde fuera)
+                    [0, 3, 5, 2], // Cara lateral 3 (CCW desde fuera)
                 ];
                 return new CANNON.ConvexPolyhedron({ vertices, faces });
             }
