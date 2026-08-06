@@ -6,7 +6,7 @@ import { createTrianglePiece } from './TrianglePiece.js';
 import { createRhombusPiece } from './RhombusPiece.js';
 
 /**
- * Agrupa todas las piezas llamando a cada constructor individual (estilo Semana 5).
+ * Agrupa todas las piezas.
  * @returns {THREE.Group}
  */
 export function createPieces() {
@@ -14,20 +14,12 @@ export function createPieces() {
 
     for (const cfg of PIECE_CONFIGS) {
         let pieceMesh;
+        if (cfg.pieceType === 'sphere') pieceMesh = createSpherePiece(cfg);
+        else if (cfg.pieceType === 'box') pieceMesh = createBoxPiece(cfg);
+        else if (cfg.pieceType === 'triangle') pieceMesh = createTrianglePiece(cfg);
+        else if (cfg.pieceType === 'rhombus') pieceMesh = createRhombusPiece(cfg);
 
-        if (cfg.pieceType === 'sphere') {
-            pieceMesh = createSpherePiece(cfg);
-        } else if (cfg.pieceType === 'box') {
-            pieceMesh = createBoxPiece(cfg);
-        } else if (cfg.pieceType === 'triangle') {
-            pieceMesh = createTrianglePiece(cfg);
-        } else if (cfg.pieceType === 'rhombus') {
-            pieceMesh = createRhombusPiece(cfg);
-        }
-
-        if (pieceMesh) {
-            group.add(pieceMesh);
-        }
+        if (pieceMesh) group.add(pieceMesh);
     }
 
     return group;

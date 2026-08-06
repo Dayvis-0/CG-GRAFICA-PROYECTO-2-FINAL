@@ -1,15 +1,8 @@
-/**
- * Funciones geométricas compartidas entre múltiples módulos.
- * Fuente única — los llamadores aplican su propia tolerancia expandiendo
- * las coordenadas antes de llamar a estas funciones.
- */
+// Funciones geométricas.
 
 import * as THREE from 'three';
 
-/**
- * Determina si un punto (px, py) está dentro de un triángulo dado.
- * Tolerancia estricta (>= 0) — el llamador expande el triángulo si necesita margen.
- */
+// Verifica punto en triángulo.
 export function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
     const d = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy);
     const a = ((by - cy) * (px - cx) + (cx - bx) * (py - cy)) / d;
@@ -19,9 +12,7 @@ export function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
 }
 
 /**
- * Half-size del bounding box de un mesh (DUP-008).
- * La geometría no cambia en runtime: los llamadores cachean el resultado
- * (WeakMap) si lo consultan por frame.
+ * Obtiene mitad del tamaño de la caja.
  * @param {THREE.Object3D} mesh
  * @returns {THREE.Vector3}
  */

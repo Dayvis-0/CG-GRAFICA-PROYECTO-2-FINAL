@@ -1,15 +1,15 @@
-style aas THREE from 'three';
+import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
- * Load and instantiate all toys (glTF and procedural 3D) in the scene.
+ * Carga e instancia juguetes en la escena.
  * @returns {THREE.Group}
  */
 export function createToyModels() {
     const group = new THREE.Group();
     const loader = new GLTFLoader();
 
-    // ── 1. Patito de Goma (Duck.glb) ──
+    // Patito de Goma
     loader.load(
         'src/assets/Duck.glb',
         (gltf) => {
@@ -24,7 +24,7 @@ export function createToyModels() {
         (err) => console.warn('[GLTF] Error cargando Duck.glb', err)
     );
 
-    // ── 2. Camioncito de Leche (CesiumMilkTruck.glb) ──
+    // Camioncito de Leche
     loader.load(
         'src/assets/CesiumMilkTruck.glb',
         (gltf) => {
@@ -39,19 +39,19 @@ export function createToyModels() {
         (err) => console.warn('[GLTF] Error cargando CesiumMilkTruck.glb', err)
     );
 
-    // ── 3. Trencito de Madera (Procedural 3D) ──
+    // Trencito de Madera
     const train = createToyTrain();
     train.position.set(-4.8, 0.2, -3.2);
     train.rotation.y = Math.PI / 3;
     group.add(train);
 
-    // ── 4. Osito de Peluche (Procedural 3D) ──
+    // Osito de Peluche
     const teddy = createTeddyBear();
     teddy.position.set(5.2, 0.45, -2.5);
     teddy.rotation.y = -Math.PI / 4;
     group.add(teddy);
 
-    // ── 5. Pelota de Juguete Colorida (Procedural 3D) ──
+    // Pelota de Juguete
     const ball = createToyBall();
     ball.position.set(4.8, 0.45, 4.2);
     group.add(ball);
@@ -59,7 +59,7 @@ export function createToyModels() {
     return group;
 }
 
-// ── Constructor de Trencito de Madera ──
+// Crea trencito
 function createToyTrain() {
     const trainGroup = new THREE.Group();
 
@@ -108,7 +108,7 @@ function createToyTrain() {
     return trainGroup;
 }
 
-// ── Constructor de Osito de Peluche ──
+// Crea osito
 function createTeddyBear() {
     const bearGroup = new THREE.Group();
 
@@ -172,7 +172,7 @@ function createTeddyBear() {
     return bearGroup;
 }
 
-// ── Constructor de Pelota de Juguete ──
+// Crea pelota
 function createToyBall() {
     const geo = new THREE.SphereGeometry(0.45, 32, 32);
 

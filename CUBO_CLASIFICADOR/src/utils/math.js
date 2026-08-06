@@ -1,16 +1,13 @@
-/**
- * Utilidades matemáticas y de clamping compartidas.
- */
+// Utilidades matemáticas.
 
 import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 
 /**
- * Restringe una posición 3D (Vector3 o {x,y,z}) dentro de unos límites (bounds).
- * Clampea X/Z siempre; clampea Y solo si `padding.y` y `bounds.height` existen.
+ * Restringe posición 3D.
  *
  * @param {{ x: number, y?: number, z: number }} pos - Posición a restringir
- * @param {{ half: number, margin?: number, height?: number }} bounds - Límites del cuarto
- * @param {{ x?: number, y?: number, z?: number }} [padding={}] - Half-size adicional por eje
+ * @param {{ half: number, margin?: number, height?: number }} bounds - Límites
+ * @param {{ x?: number, y?: number, z?: number }} [padding={}] - Espacio extra
  * @returns {{ x: number, y?: number, z: number }}
  */
 export function clampToBounds(pos, bounds, padding = {}) {

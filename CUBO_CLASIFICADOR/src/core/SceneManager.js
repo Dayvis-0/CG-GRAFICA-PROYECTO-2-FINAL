@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 
 /**
- * Crea la escena base con fondo oscuro.
  * @returns {THREE.Scene}
  */
 export function createScene() {

@@ -1,23 +1,15 @@
-/**
- * Audio compartido (DUP-007 + PERF-001).
- *
- * Un único `AudioContext` lazy singleton: los navegadores limitan la cantidad
- * de contextos concurrentes y crearlos por sonido es costoso. Los tonos se
- * programan sobre ese contexto con oscilador + gain (nada de assets).
- */
-
+// Gestor de audio compartido.
 /** @type {AudioContext | null} */
 let _ctx = null;
 
-/** Devuelve el contexto compartido, creándolo la primera vez (PERF-001). */
+// Obtiene el contexto de audio.
 function getContext() {
     if (!_ctx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (!AudioCtx) return null;
         _ctx = new AudioCtx();
     }
-    // Requisito de autoplay: el contexto puede nacer 'suspended' si aún no
-    // hubo interacción del usuario; se reanuda al reproducir.
+    // Reanuda el contexto si estaba suspendido.
     if (_ctx.state === 'suspended') {
         _ctx.resume().catch(() => {});
     }
@@ -25,7 +17,7 @@ function getContext() {
 }
 
 /**
- * Programa un tono simple sobre el contexto compartido.
+ * Programa un tono de audio.
  * @param {object} note
  * @param {number} note.freq     — frecuencia (Hz)
  * @param {number} note.start    — offset en segundos desde ahora
@@ -47,10 +39,10 @@ function scheduleTone({ freq, start, duration, type = 'sine', gain = 0.2 }) {
     osc.connect(g);
     g.connect(ctx.destination);
     osc.start(now + start);
-    osc.stop(now + start + duration + 0.1); // sobrevive al ramp para evitar clics
+    osc.stop(now + start + duration + 0.1);
 }
 
-/** Sonido de éxito Montessori (xilofón de madera): dos notas en quinta (C5 → E5). */
+// Sonido de éxito.
 export function playSuccessSound() {
     try {
         scheduleTone({ freq: 523.25, start: 0, duration: 0.5, type: 'triangle', gain: 0.25 });
@@ -61,9 +53,9 @@ export function playSuccessSound() {
 }
 
 let lastErrorSoundTime = 0;
-const ERROR_COOLDOWN_MS = 400; // ERR-005: cooldown para que no suene en bucle
+const ERROR_COOLDOWN_MS = 400;
 
-/** Sonido de error (zumbador grave) con cooldown anti-bucle (ERR-005). */
+// Sonido de error.
 export function playErrorSound() {
     const timeNow = performance.now();
     if (timeNow - lastErrorSoundTime < ERROR_COOLDOWN_MS) return;

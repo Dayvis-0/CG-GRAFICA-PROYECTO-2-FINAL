@@ -1,13 +1,6 @@
 import * as THREE from 'three';
 
 /**
- * Helper centralizado para consultas y comprobaciones de colisión AABB.
- * Evita duplicar lógica de intersección de cajas en múltiples módulos.
- */
-
-/**
- * Comprueba si un punto/vector está dentro de una caja AABB expandida por un margen.
- *
  * @param {THREE.Vector3|{x:number, y:number, z:number}} pos
  * @param {THREE.Box3} box
  * @param {number} [margin=0]
@@ -25,8 +18,6 @@ export function isPointInsideBox(pos, box, margin = 0) {
 }
 
 /**
- * Comprueba si una caja AABB candidata intersecta alguna caja de una lista de obstáculos.
- *
  * @param {THREE.Box3} candidateBox
  * @param {THREE.Box3[]} obstacleBoxes
  * @returns {boolean}

@@ -11,11 +11,7 @@ function makeTexture(drawFn, size = 256) {
     return tex;
 }
 
-/**
- * Fábrica de texturas procedurales con Lazy Loading (PERF-006).
- * Las texturas se generan bajo demanda (al primer acceso) en lugar de
- * crear todas al inicio. La generación se cachea para accesos posteriores.
- */
+// Genera y cachea texturas.
 export function createTextures() {
     const _cache = {};
 
@@ -30,7 +26,7 @@ export function createTextures() {
     return { get };
 }
 
-// ── Drawers individuales (no se ejecutan hasta que se accede a la textura) ──
+// Funciones de dibujo por textura.
 const _DRAWERS = {
     stripes: (ctx, s) => {
         ctx.fillStyle = '#222';

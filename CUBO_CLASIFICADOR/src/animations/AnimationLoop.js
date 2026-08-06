@@ -3,26 +3,6 @@ import { clampToBounds } from '../utils/math.js';
 import { getHalfSize } from '../utils/geometry.js';
 import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 
-/**
- * Bucle de renderizado principal: FPS, físicas, clamp de seguridad, input y render.
- *
- * CONTRATO DE REF COMPARTIDA (ARQ-002): `activeCameraRef` — `{ current: THREE.Camera }`.
- * La escribe el compositor según el modo de cámara; este módulo la lee una vez
- * por frame para renderizar. Implica: el render y el raycast del drag SIEMPRE
- * usan la misma cámara activa.
- *
- * @param {object} opts
- * @param {THREE.Scene}           opts.scene
- * @param {THREE.WebGLRenderer}   opts.renderer
- * @param {{ current: THREE.Camera }} opts.activeCameraRef
- * @param {{ update: function }}   opts.fpsControl
- * @param {THREE.Group}           opts.pieces
- * @param {object}                opts.physicsSystem
- * @param {object}                opts.inputManager
- * @param {object}                opts.dragManager
- * @param {{ half: number, height: number }} opts.roomBounds
- * @param {function}                        opts.onPostPhysics  — callback tras físicas (opcional)
- */
 export function setupAnimationLoop({
     scene,
     renderer,
@@ -35,15 +15,12 @@ export function setupAnimationLoop({
     roomBounds,
     onPostPhysics,
 }) {
-    // ─── Reusables para clamp post-física ────────────────────────
-    const HALF   = roomBounds?.half ?? 7;
+    const HALF = roomBounds?.half ?? 7;
     const HEIGHT = roomBounds?.height ?? 8;
-    const MARGIN = ROOM_MARGIN; // mismo margen que DragManager (DUP-004)
+    const MARGIN = ROOM_MARGIN;
 
-    // Cache de half-sizes por pieza (geometría no cambia en runtime)
     const _halfSizeCache = new WeakMap();
 
-    /** Clamp post-física: si una pieza salió del cuarto, la reencuadra y anula su velocidad. */
     function clampToRoomBounds(draggedMesh) {
         for (const child of pieces.children) {
             if (!child.isMesh || child === draggedMesh) continue;
@@ -51,21 +28,20 @@ export function setupAnimationLoop({
             const body = child.userData.body;
             if (!body || body.type !== CANNON.Body.DYNAMIC) continue;
 
-            // Usar half-size cacheado (DUP-008)
             let hs = _halfSizeCache.get(child);
             if (!hs) {
                 hs = getHalfSize(child);
                 _halfSizeCache.set(child, hs);
             }
 
-            // Clamp unificado X/Z/Y (DUP-003): la misma aritmética que DragManager
             const px = child.position.x;
             const py = child.position.y;
             const pz = child.position.z;
+            
             clampToBounds(
                 child.position,
                 { half: HALF, height: HEIGHT, margin: MARGIN },
-                { x: hs.x, y: hs.y, z: hs.z },
+                { x: hs.x, y: hs.y, z: hs.z }
             );
 
             let clamped = false;
@@ -73,7 +49,6 @@ export function setupAnimationLoop({
             if (child.position.y !== py) { body.position.y = child.position.y; clamped = true; }
             if (child.position.z !== pz) { body.position.z = child.position.z; clamped = true; }
 
-            // Anular toda la velocidad para evitar que siga escapando por otro eje
             if (clamped) {
                 body.velocity.setZero();
                 body.angularVelocity.setZero();
@@ -82,7 +57,6 @@ export function setupAnimationLoop({
         }
     }
 
-    // ─── Bucle ────────────────────────────────────────────────────
     let lastTime = performance.now();
 
     function animate(now) {
@@ -94,16 +68,13 @@ export function setupAnimationLoop({
         fpsControl.update();
 
         const draggedMesh = dragManager.getSelected();
-
         physicsSystem.update(dt, draggedMesh);
 
-        // Safety net: clampa piezas dinámicas al cuarto para evitar tunneling
         clampToRoomBounds(draggedMesh);
 
         if (onPostPhysics) onPostPhysics(draggedMesh);
 
         dragManager.updateArrowInput(inputManager);
-
         renderer.render(scene, activeCameraRef.current);
     }
 

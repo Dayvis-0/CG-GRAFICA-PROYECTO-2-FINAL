@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 /**
- * Create the simplified decorative picture (Canvas with the image of Van Gogh).
+ * Crea cuadro decorativo.
  * @returns {THREE.Mesh}
  */
 export function createPainting() {
@@ -9,6 +9,5 @@ export function createPainting() {
     const texture = new THREE.TextureLoader().load('src/assets/vangoh.jpg');
     const material = new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide });
 
-    const mesh = new THREE.Mesh(geometry, material);
-    return mesh;
+    return new THREE.Mesh(geometry, material);
 }

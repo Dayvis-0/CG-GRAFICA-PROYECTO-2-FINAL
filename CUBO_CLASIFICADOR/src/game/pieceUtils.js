@@ -1,8 +1,3 @@
-/**
- * Reubica una pieza en `pos`: visual + física + reset de velocidades.
- * @param {THREE.Mesh} mesh
- * @param {THREE.Vector3} pos
- */
 export function teleportPiece(mesh, pos) {
     mesh.position.copy(pos);
     mesh.quaternion.identity();

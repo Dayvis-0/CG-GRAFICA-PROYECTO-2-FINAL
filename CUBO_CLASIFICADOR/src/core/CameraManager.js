@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 
 /**
- * Crea la cámara en perspectiva para navegación FPS dentro del cuarto.
- * La posición inicial la define el modo de cámara (`setCameraMode` en index.js).
- *
  * @returns {{ cam: THREE.PerspectiveCamera }}
  */
 export function createCamera() {

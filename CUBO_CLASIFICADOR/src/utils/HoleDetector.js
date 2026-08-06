@@ -1,12 +1,8 @@
 import { pointInTriangle } from './geometry.js';
 
-// Tolerancia para que el usuario no necesite precisión milimétrica
 export const HOLE_TOLERANCE = 0.1;
 
 /**
- * Valida matemáticamente si el punto (sx, sy) está dentro de una forma con un margen dado.
- * Centraliza la lógica de colisión geométrica 2D (DRY).
- *
  * @param {number} sx
  * @param {number} sy
  * @param {object} cfg    — Configuración de la forma
@@ -50,8 +46,6 @@ export function isPointInsideShape(sx, sy, cfg, margin) {
 }
 
 /**
- * Determina si un punto (sx, sy) en coordenadas del Shape cae dentro de un hueco configurado.
- *
  * @param {number} sx
  * @param {number} sy
  * @param {object} cfg — entrada de HOLE_CONFIGS

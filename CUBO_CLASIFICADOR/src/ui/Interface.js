@@ -1,28 +1,16 @@
-/**
- * Configura el HUD y panel de control del Cubo Clasificador.
- *
- * Responsabilidad ÚNICA: manejar la interfaz DOM (HUD + panel).
- * No escucha teclado — eso vive en InputManager + AnimationLoop.
- */
-export function setupInterface({
-    piecesGroup,
-    buildMaterial,
-    lights,
-}) {
+export function setupInterface({ piecesGroup, buildMaterial, lights }) {
     const labelToMesh = {};
     piecesGroup.children.forEach(c => {
         if (c.isMesh) labelToMesh[c.userData.label] = c;
     });
 
     let selectedKey = null;
-
-    // ── Puntajes por pieza clasificada ──
     const scores = {};
+    
     piecesGroup.children.forEach(c => {
         if (c.isMesh) scores[c.userData.label] = 0;
     });
 
-    // ── Helpers de Estado ──
     function getMeshState() {
         if (!selectedKey) return null;
         const mesh = labelToMesh[selectedKey];
@@ -38,7 +26,6 @@ export function setupInterface({
         };
     }
 
-    // ── HUD: actualización de puntajes ──
     function updateHUD() {
         for (const label in scores) {
             const el = document.getElementById(`score-${label}`);
@@ -46,9 +33,9 @@ export function setupInterface({
         }
     }
 
-    // ── 1. PANEL: Generar botones de objeto dinámicamente ──
     const btnContainer = document.getElementById('obj-buttons');
     if (btnContainer) btnContainer.innerHTML = '';
+    
     piecesGroup.children.forEach(c => {
         if (!c.isMesh) return;
         const btn = document.createElement('button');
@@ -60,19 +47,14 @@ export function setupInterface({
         btnContainer.appendChild(btn);
     });
 
-    // ── 2. Cachear DOM queries (Ejecutado DESPUÉS de poblar obj-buttons) ──
     const _objBtns = [...document.querySelectorAll('.objbtn')];
     const _matBtns = [...document.querySelectorAll('.matbtn')];
     const _texBtns = [...document.querySelectorAll('.texbtn')];
     const _wfBtn = document.getElementById('wf-btn');
 
-    // ── 3. Actualizar resaltado de botones seleccionados en el panel ──
     function updatePanelSelection() {
         const st = getMeshState();
-        // Resaltar el botón del objeto activo
-        _objBtns.forEach(b => {
-            b.classList.toggle('active', b.dataset.key === selectedKey);
-        });
+        _objBtns.forEach(b => b.classList.toggle('active', b.dataset.key === selectedKey));
 
         if (!st) {
             _matBtns.forEach(b => b.classList.remove('active'));
@@ -84,20 +66,15 @@ export function setupInterface({
             return;
         }
 
-        // Resaltar botones de material, textura y wireframe
-        _matBtns.forEach(b => {
-            b.classList.toggle('active', b.dataset.mat === st.state.material);
-        });
-        _texBtns.forEach(b => {
-            b.classList.toggle('active', b.dataset.tex === st.state.texture);
-        });
+        _matBtns.forEach(b => b.classList.toggle('active', b.dataset.mat === st.state.material));
+        _texBtns.forEach(b => b.classList.toggle('active', b.dataset.tex === st.state.texture));
+        
         if (_wfBtn) {
             _wfBtn.classList.toggle('active', st.state.wireframe);
             _wfBtn.textContent = st.state.wireframe ? 'Wireframe: ON' : 'Wireframe: OFF';
         }
     }
 
-    // ── Aplicar estado actualizado al mesh ──
     function applyState(st) {
         if (!st) return;
         const oldMat = st.mesh.material;
@@ -112,13 +89,10 @@ export function setupInterface({
         if (!selectedKey) return;
         const st = getMeshState();
         if (!st) return;
-        st.state[propKey] = typeof valueOrFn === 'function'
-            ? valueOrFn(st.state[propKey])
-            : valueOrFn;
+        st.state[propKey] = typeof valueOrFn === 'function' ? valueOrFn(st.state[propKey]) : valueOrFn;
         applyState(st);
     }
 
-    // ── Seleccionar pieza por objeto o etiqueta ──
     function onPieceSelected(mesh) {
         if (mesh && mesh.userData.label && labelToMesh[mesh.userData.label]) {
             selectedKey = mesh.userData.label;
@@ -129,26 +103,13 @@ export function setupInterface({
     }
 
     function selectByLabel(label) {
-        if (selectedKey === label) {
-            selectedKey = null; // Toggle: si se toca de nuevo, se deselecciona
-        } else {
-            selectedKey = label;
-        }
+        selectedKey = selectedKey === label ? null : label;
         updatePanelSelection();
     }
 
-    // ── Events listeners de Materiales y Luces ──
-    _matBtns.forEach(btn => {
-        btn.onclick = () => onStateChange('material', btn.dataset.mat);
-    });
-
-    _texBtns.forEach(btn => {
-        btn.onclick = () => onStateChange('texture', btn.dataset.tex);
-    });
-
-    if (_wfBtn) {
-        _wfBtn.onclick = () => onStateChange('wireframe', prev => !prev);
-    }
+    _matBtns.forEach(btn => btn.onclick = () => onStateChange('material', btn.dataset.mat));
+    _texBtns.forEach(btn => btn.onclick = () => onStateChange('texture', btn.dataset.tex));
+    if (_wfBtn) _wfBtn.onclick = () => onStateChange('wireframe', prev => !prev);
 
     document.querySelectorAll('.lighttoggle').forEach(tg => {
         tg.onclick = () => {
@@ -158,9 +119,9 @@ export function setupInterface({
         };
     });
 
-    // ── Construir filas de puntajes en el HUD ──
     const scoresContainer = document.getElementById('hud-scores');
     if (scoresContainer) scoresContainer.innerHTML = '';
+    
     piecesGroup.children.forEach(c => {
         if (!c.isMesh) return;
         const label = c.userData.label;
@@ -178,7 +139,6 @@ export function setupInterface({
         if (scoresContainer) scoresContainer.appendChild(row);
     });
 
-    // ── Botón Toggle del Panel (Ajustes) ──
     const panelEl = document.getElementById('panel');
     const panelToggleBtn = document.getElementById('panel-toggle-btn');
     if (panelToggleBtn && panelEl) {
@@ -188,7 +148,6 @@ export function setupInterface({
         };
     }
 
-    // ── Inicializar ──
     updateHUD();
     updatePanelSelection();
 

@@ -1,18 +1,18 @@
 import * as THREE from 'three';
 
 /**
- * Configura la iluminación base de la escena.
+ * Configura luces de escena.
  * @param {THREE.Scene} scene
  * @returns {{ ambient: THREE.AmbientLight, ceiling: THREE.PointLight, dir: THREE.DirectionalLight }}
  */
 export function createLights(scene) {
     const lights = {};
 
-    // Luz ambiental blanca cálida
+    // Luz ambiental.
     lights.ambient = new THREE.AmbientLight(0xfff8e7, 0.55);
     scene.add(lights.ambient);
 
-    // Luz de techo en el centro (desactivada por defecto)
+    // Luz central desactivada.
     lights.ceiling = new THREE.PointLight(0xffffff, 3.5, 35);
     lights.ceiling.position.set(0, 7.5, 0);
     lights.ceiling.castShadow = true;
@@ -21,7 +21,7 @@ export function createLights(scene) {
     lights.ceiling.visible = false;
     scene.add(lights.ceiling);
 
-    // Luz direccional principal con sombras (encendida por defecto)
+    // Luz direccional con sombras.
     lights.dir = new THREE.DirectionalLight(0xfff0dd, 0.8);
     lights.dir.position.set(7, 12, 9);
     lights.dir.castShadow = true;
