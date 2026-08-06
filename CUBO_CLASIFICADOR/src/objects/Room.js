@@ -69,10 +69,10 @@ export function createRoom({ size = 14, height = 8 } = {}) {
     // ── Paredes (4: N, S, E, O) con paleta pastel colorida y textura frontal ──
     const wallGeo = new THREE.PlaneGeometry(size, height);
     const wallConfigs = [
-        { rotY: 0,           x: 0,    z: -half, color: 0xc8e6c9, isFront: true }, // Norte (Frontal)
-        { rotY: Math.PI,     x: 0,    z:  half, color: 0xbbdefb },                 // Sur
-        { rotY: -Math.PI / 2, x: half, z: 0,    color: 0xe1bee7 },                 // Este
-        { rotY:  Math.PI / 2, x: -half, z: 0,    color: 0xffecb3 },                 // Oeste
+        { rotY: 0,           x: 0,    z: -half, color: 0xc8e6c9, texture: 'src/assets/pared.avif' }, // North (Front)
+        { rotY: Math.PI,     x: 0,    z:  half, color: 0xbbdefb, texture: 'src/assets/pared1.jpg' }, // Sur (Trasera con pared1.jpg)
+        { rotY: -Math.PI / 2, x: half, z: 0,    color: 0xffecb3 },                                   // Este (Lateral - Amarillo pastel)
+        { rotY:  Math.PI / 2, x: -half, z: 0,    color: 0xffecb3 },                                   // Oeste (Lateral - Amarillo pastel)
     ];
 
     for (const cfg of wallConfigs) {
@@ -83,9 +83,9 @@ export function createRoom({ size = 14, height = 8 } = {}) {
             side: THREE.DoubleSide,
         });
 
-        if (cfg.isFront) {
+        if (cfg.texture) {
             textureLoader.load(
-                'src/assets/pared.avif',
+                cfg.texture,
                 (tex) => {
                     tex.repeat.set(1, 1);
                     wallMat.map = tex;
@@ -94,7 +94,7 @@ export function createRoom({ size = 14, height = 8 } = {}) {
                 },
                 undefined,
                 (err) => {
-                    console.warn('[Texturas] No se pudo cargar src/assets/pared.avif, usando color pastel base.', err);
+                    console.warn(`[Texturas] No se pudo cargar ${cfg.texture}, usando color pastel base.`, err);
                 }
             );
         }
