@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { ROOM_MARGIN } from '../data/classifierDimensions.js';
+import { createPainting } from './Painting.js';
 
 /**
  * Crea el cuarto completo: piso, techo y 4 paredes con sombras y materiales PBR.
@@ -69,10 +70,10 @@ export function createRoom({ size = 14, height = 8 } = {}) {
     // ── Paredes (4: N, S, E, O) con paleta pastel colorida y textura frontal ──
     const wallGeo = new THREE.PlaneGeometry(size, height);
     const wallConfigs = [
-        { rotY: 0,           x: 0,    z: -half, color: 0xc8e6c9, texture: 'src/assets/pared.avif' }, // North (Front)
-        { rotY: Math.PI,     x: 0,    z:  half, color: 0xbbdefb, texture: 'src/assets/pared1.jpg' }, // Sur (Trasera con pared1.jpg)
-        { rotY: -Math.PI / 2, x: half, z: 0,    color: 0xffecb3 },                                   // Este (Lateral - Amarillo pastel)
-        { rotY:  Math.PI / 2, x: -half, z: 0,    color: 0xffecb3 },                                   // Oeste (Lateral - Amarillo pastel)
+        { rotY: 0,           x: 0,    z: -half, color: 0xc8e6c9, texture: 'src/assets/pared.avif' }, // Norte (Frontal)
+        { rotY: Math.PI,     x: 0,    z:  half, color: 0xbbdefb, texture: 'src/assets/pared1.jpg' }, // Sur (Trasera)
+        { rotY: -Math.PI / 2, x: half, z: 0,    color: 0xffecb3 },                                   // Este (Lateral amarillo)
+        { rotY:  Math.PI / 2, x: -half, z: 0,    color: 0xffecb3 },                                   // Oeste (Lateral amarillo)
     ];
 
     for (const cfg of wallConfigs) {
@@ -106,6 +107,12 @@ export function createRoom({ size = 14, height = 8 } = {}) {
         wall.receiveShadow = false;
         group.add(wall);
     }
+
+    // ── Cuadro decorativo en la pared Este (amarilla) ──
+    const painting = createPainting();
+    painting.position.set(half - 0.06, height / 2, 0);
+    painting.rotation.y = -Math.PI / 2;
+    group.add(painting);
 
     // Guardar límites para colisión de cámara
     group.userData = {
