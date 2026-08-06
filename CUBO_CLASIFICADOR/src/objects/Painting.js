@@ -10,6 +10,5 @@ export function createPainting() {
     const material = new THREE.MeshStandardMaterial({ map: texture, side: THREE.DoubleSide });
 
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.castShadow = true;
     return mesh;
 }

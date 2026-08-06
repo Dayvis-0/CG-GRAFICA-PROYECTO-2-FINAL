@@ -5,6 +5,7 @@ import { createRenderer }       from './core/RendererManager.js';
 import { createRoom }           from './objects/Room.js';
 import { createClassifier }     from './objects/Classifier.js';
 import { createPieces }         from './objects/Pieces.js';
+import { createToyModels }      from './objects/ToyModels.js';
 import { createLights }         from './lights/Lights.js';
 import { createTextures }       from './textures/TextureFactory.js';
 import { createMaterialFactory } from './materials/MaterialFactory.js';
@@ -29,7 +30,7 @@ import { clampToBounds }        from './utils/math.js';
 import { OrbitControls }        from 'three/addons/controls/OrbitControls.js';
 
 try {
-    let currentMode = 'infantil';
+    let currentMode = 'experto';
     let fpsControls;
 
     // ─── Input · Escena · Cámara · Renderer ────────────────────────────
@@ -50,6 +51,9 @@ try {
 
     const pieces = createPieces();
     scene.add(pieces);
+
+    const toyModels = createToyModels();
+    scene.add(toyModels);
 
     const lights = createLights(scene);
 
@@ -188,6 +192,9 @@ try {
     document.getElementById('cam-infantil-btn')?.addEventListener('click', () => setCameraMode('infantil'));
     document.getElementById('cam-experto-btn')?.addEventListener('click', () => setCameraMode('experto'));
 
+    // Activar por defecto el modo WASD al iniciar
+    setCameraMode('experto');
+
     // ─── Estado del juego (SRP-001) ────────────────────────────────────
     // Ref mutable para la dependencia circular gameState ↔ dragManager (ARQ-002)
     const dragManagerRef = { current: null };
@@ -304,6 +311,7 @@ try {
         const hudTitle = document.getElementById('hud-title');
         if (hudTitle) hudTitle.textContent = name.toUpperCase();
         document.getElementById('loading-overlay')?.classList.add('hidden');
+        setCameraMode('experto');
         console.log(`👤 Bienvenido, ${name}`);
     });
 
