@@ -1,9 +1,4 @@
-/**
- * Fallback de CDN (SEC-002): si el CDN principal (jsdelivr) falla, reintenta
- * con unpkg reescribiendo el import map ANTES de que se ejecuten los módulos.
- *
- * Archivo externo (no inline) para permitir una CSP estricta sin 'unsafe-inline'.
- */
+// Fallback de CDN para Three.js y Cannon-es si falla el CDN principal.
 (async function () {
     try {
         await import('three');

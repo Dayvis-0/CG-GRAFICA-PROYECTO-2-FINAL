@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 
-/**
- * @param {object} textures
- * @returns {function} buildMaterial(type, color, textureKey, wireframe)
- */
+// Crea la fábrica de materiales basada en texturas.
 export function createMaterialFactory(textures) {
     return function buildMaterial(type, color, textureKey, wireframe = false) {
         const tex = textures.get(textureKey);

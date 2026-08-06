@@ -1,6 +1,4 @@
-/**
- * Constantes de física para Cannon-es.
- */
+// Constantes de física para Cannon-es.
 export const PHYSICS_CONSTANTS = {
     LINEAR_DAMPING: 0.05,
     ANGULAR_DAMPING: 0.1,

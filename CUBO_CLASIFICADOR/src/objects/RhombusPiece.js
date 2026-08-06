@@ -1,11 +1,7 @@
 import * as THREE from 'three';
 import { setupPiece } from './pieceUtils.js';
 
-/**
- * Crea pieza rombo.
- * @param {object} cfg
- * @returns {THREE.Mesh}
- */
+// Crea la pieza 3D con forma de rombo.
 export function createRhombusPiece(cfg) {
     const [width, height, depth] = cfg.pieceArgs;
 

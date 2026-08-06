@@ -1,11 +1,7 @@
 import * as THREE from 'three';
 import { setupPiece } from './pieceUtils.js';
 
-/**
- * Crea pieza triangular.
- * @param {object} cfg
- * @returns {THREE.Mesh}
- */
+// Crea la pieza 3D con forma triangular.
 export function createTrianglePiece(cfg) {
     const [r, depth] = cfg.pieceArgs;
 

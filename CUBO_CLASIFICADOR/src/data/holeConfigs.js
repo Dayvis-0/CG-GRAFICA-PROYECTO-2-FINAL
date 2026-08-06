@@ -1,16 +1,4 @@
-// Configuración de huecos y piezas del clasificador.
-/** @type {Array<{
- *   label:       string,
- *   shape:       'circle'|'square'|'triangle'|'rhombus',
- *   cx:          number,
- *   cy:          number,
- *   hole:        object,
- *   pieceType:   'sphere'|'box'|'triangle'|'rhombus',
- *   pieceArgs:   number[],        // argumentos para el constructor de la geometría
- *   pieceColor:  number,
- *   piecePos:    {x:number, z:number},
- *   pieceY:      number,
- * }>} */
+// Configuración de huecos del clasificador.
 export const HOLE_CONFIGS = [
     {
         label: 'Esfera',
@@ -58,7 +46,7 @@ export const HOLE_CONFIGS = [
     },
 ];
 
-/** Piezas para cada hueco */
+// Configuración de piezas para cada hueco.
 export const PIECE_CONFIGS = [
     {
         label: 'Esfera',

@@ -1,11 +1,6 @@
 import * as THREE from 'three';
 
-/**
- * Configura el material, posición y userData de una pieza.
- * @param {THREE.BufferGeometry} geometry
- * @param {object} cfg
- * @returns {THREE.Mesh}
- */
+// Configura el material, posición y metadatos de una pieza.
 export function setupPiece(geometry, cfg) {
     const material = new THREE.MeshStandardMaterial({
         color: cfg.pieceColor,

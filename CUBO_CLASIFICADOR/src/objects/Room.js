@@ -2,13 +2,7 @@ import * as THREE from 'three';
 import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 import { createPainting } from './Painting.js';
 
-/**
- * Crea el cuarto completo: piso, techo y 4 paredes.
- * @param {object} options
- * @param {number} options.size
- * @param {number} options.height
- * @returns {THREE.Group}
- */
+// Crea la habitación completa con piso, techo y paredes.
 export function createRoom({ size = 14, height = 8 } = {}) {
     const group = new THREE.Group();
     const half = size / 2;

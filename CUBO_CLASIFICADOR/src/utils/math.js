@@ -2,14 +2,7 @@
 
 import { ROOM_MARGIN } from '../data/classifierDimensions.js';
 
-/**
- * Restringe posición 3D.
- *
- * @param {{ x: number, y?: number, z: number }} pos - Posición a restringir
- * @param {{ half: number, margin?: number, height?: number }} bounds - Límites
- * @param {{ x?: number, y?: number, z?: number }} [padding={}] - Espacio extra
- * @returns {{ x: number, y?: number, z: number }}
- */
+// Restringe una posición 3D dentro de los límites de la escena.
 export function clampToBounds(pos, bounds, padding = {}) {
     const half = bounds.half ?? bounds.limit ?? 7;
     const margin = bounds.margin ?? ROOM_MARGIN;

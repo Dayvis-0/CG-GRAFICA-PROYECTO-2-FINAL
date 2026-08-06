@@ -1,9 +1,6 @@
 import * as THREE from 'three';
 
-/**
- * @param {HTMLElement} container
- * @returns {THREE.WebGLRenderer}
- */
+// Crea y configura el renderizador WebGL de la escena.
 export function createRenderer(container) {
     // Verifica soporte WebGL.
     const testCanvas = document.createElement('canvas');

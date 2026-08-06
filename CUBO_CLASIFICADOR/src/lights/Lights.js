@@ -1,10 +1,6 @@
 import * as THREE from 'three';
 
-/**
- * Configura luces de escena.
- * @param {THREE.Scene} scene
- * @returns {{ ambient: THREE.AmbientLight, ceiling: THREE.PointLight, dir: THREE.DirectionalLight }}
- */
+// Configura y crea las luces de la escena.
 export function createLights(scene) {
     const lights = {};
 

@@ -5,10 +5,7 @@ import { createBoxPiece } from './BoxPiece.js';
 import { createTrianglePiece } from './TrianglePiece.js';
 import { createRhombusPiece } from './RhombusPiece.js';
 
-/**
- * Agrupa todas las piezas.
- * @returns {THREE.Group}
- */
+// Agrupa todas las piezas geométricas del juego.
 export function createPieces() {
     const group = new THREE.Group();
 

@@ -11,11 +11,7 @@ export function pointInTriangle(px, py, ax, ay, bx, by, cx, cy) {
     return a >= 0 && b >= 0 && c >= 0;
 }
 
-/**
- * Obtiene mitad del tamaño de la caja.
- * @param {THREE.Object3D} mesh
- * @returns {THREE.Vector3}
- */
+// Obtiene la mitad del tamaño de la caja de un objeto 3D.
 export function getHalfSize(mesh) {
     const box = new THREE.Box3().setFromObject(mesh);
     const size = new THREE.Vector3();

@@ -1,7 +1,4 @@
-/**
- * @param {THREE.PerspectiveCamera} camera
- * @param {THREE.WebGLRenderer} renderer
- */
+// Maneja el redimensionamiento de ventana para actualizar la cámara y el renderizador.
 export function setupResize(camera, renderer) {
     let resizeScheduled = false;
 

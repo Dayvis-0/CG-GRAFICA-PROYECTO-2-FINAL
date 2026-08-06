@@ -21,10 +21,7 @@ const BOX_MAT = new THREE.MeshStandardMaterial({
     side: THREE.DoubleSide,
 });
 
-/**
- * Crea el cubo clasificador hueco.
- * @returns {{ group: THREE.Group, walls: THREE.Mesh[], panel: THREE.Mesh }}
- */
+// Crea el cubo clasificador hueco con paredes y panel.
 export function createClassifier() {
     const group = new THREE.Group();
     const walls = [];

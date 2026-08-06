@@ -1,25 +1,13 @@
 import { Path } from 'three';
 
-/**
- * Crea hueco circular.
- * @param {number} cx
- * @param {number} cy
- * @param {number} r
- * @returns {Path}
- */
+// Crea el trazado 2D de un hueco circular.
 export function circleHole(cx, cy, r) {
     const path = new Path();
     path.absarc(cx, cy, r, 0, Math.PI * 2, true);
     return path;
 }
 
-/**
- * Crea hueco cuadrado.
- * @param {number} cx
- * @param {number} cy
- * @param {number} side
- * @returns {Path}
- */
+// Crea el trazado 2D de un hueco cuadrado.
 export function squareHole(cx, cy, side) {
     const half = side / 2;
     const path = new Path();
@@ -31,9 +19,7 @@ export function squareHole(cx, cy, side) {
     return path;
 }
 
-/**
- * Crea hueco triangular (4 vértices para earcut).
- */
+// Crea el trazado 2D de un hueco triangular.
 export function triangleHole(cx, cy, r) {
     const path = new Path();
     const s32 = 0.86602540378;
@@ -47,9 +33,7 @@ export function triangleHole(cx, cy, r) {
     return path;
 }
 
-/**
- * Crea hueco rombo.
- */
+// Crea el trazado 2D de un hueco en forma de rombo.
 export function rhombusHole(cx, cy, width, height) {
     const hw = width / 2;
     const hh = height / 2;

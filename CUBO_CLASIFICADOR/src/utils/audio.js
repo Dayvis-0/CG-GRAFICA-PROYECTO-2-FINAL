@@ -1,5 +1,4 @@
 // Gestor de audio compartido.
-/** @type {AudioContext | null} */
 let _ctx = null;
 
 // Obtiene el contexto de audio.
@@ -16,15 +15,7 @@ function getContext() {
     return _ctx;
 }
 
-/**
- * Programa un tono de audio.
- * @param {object} note
- * @param {number} note.freq     — frecuencia (Hz)
- * @param {number} note.start    — offset en segundos desde ahora
- * @param {number} note.duration — duración del ramp de decaimiento (s)
- * @param {OscillatorType} [note.type='sine']
- * @param {number} [note.gain=0.2]
- */
+// Programa y reproduce un tono de audio sintético.
 function scheduleTone({ freq, start, duration, type = 'sine', gain = 0.2 }) {
     const ctx = getContext();
     if (!ctx) return;

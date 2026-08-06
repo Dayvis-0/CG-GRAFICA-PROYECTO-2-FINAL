@@ -1,11 +1,6 @@
 import * as THREE from 'three';
 
-/**
- * @param {THREE.Vector3|{x:number, y:number, z:number}} pos
- * @param {THREE.Box3} box
- * @param {number} [margin=0]
- * @returns {boolean}
- */
+// Verifica si una posición se encuentra dentro de una caja de colisión.
 export function isPointInsideBox(pos, box, margin = 0) {
     return (
         pos.x >= box.min.x - margin &&
@@ -17,11 +12,7 @@ export function isPointInsideBox(pos, box, margin = 0) {
     );
 }
 
-/**
- * @param {THREE.Box3} candidateBox
- * @param {THREE.Box3[]} obstacleBoxes
- * @returns {boolean}
- */
+// Verifica si una caja de colisión se intersecta con alguna otra de la lista.
 export function intersectsAnyObstacle(candidateBox, obstacleBoxes) {
     for (let i = 0; i < obstacleBoxes.length; i++) {
         if (candidateBox.intersectsBox(obstacleBoxes[i])) return true;
