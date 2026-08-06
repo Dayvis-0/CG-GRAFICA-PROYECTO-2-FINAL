@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { isPointInsideBox } from '../utils/CollisionHelper.js';
 import { clampToBounds } from '../utils/math.js';
 
-// Permite mover la cámara en primera persona usando el mouse para mirar y las teclas WASD para caminar.
+// Allows you to move the camera in the first person using the mouse to look and the WASD keys to walk.
 export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], draggingRef = { current: false }, inputManager) {
     const { height, margin } = roomBounds;
     const yMin = margin;
