@@ -22,17 +22,8 @@ const BOX_MAT = new THREE.MeshStandardMaterial({
     side: THREE.DoubleSide,
 });
 
-// Dispatcher de creación de huecos
-const HOLE_BUILDERS = {
-    circle:   (cfg) => circleHole(cfg.cx, cfg.cy, cfg.hole.r),
-    square:   (cfg) => squareHole(cfg.cx, cfg.cy, cfg.hole.side),
-    triangle: (cfg) => triangleHole(cfg.cx, cfg.cy, cfg.hole.r),
-    rhombus:  (cfg) => rhombusHole(cfg.cx, cfg.cy, cfg.hole.width, cfg.hole.height),
-};
-
-// Función principal
 /**
- * Crea el cubo clasificador HUECO con 4 huecos agrandados en la cara superior.
+ * Crea el cubo clasificador HUECO de forma explícita y lineal (estilo Semana 5).
  *
  * @returns {{ group: THREE.Group, walls: THREE.Mesh[], panel: THREE.Mesh }}
  */
@@ -40,47 +31,58 @@ export function createClassifier() {
     const group = new THREE.Group();
     const walls = [];
 
-    // --- 1. Pared inferior (suelo) ---
-    const floor = new THREE.Mesh(
-        new THREE.BoxGeometry(OUTER, WALL_THICK, OUTER),
-        BOX_MAT
-    );
+    // --- 1. Suelo del clasificador ---
+    const floorGeo = new THREE.BoxGeometry(OUTER, WALL_THICK, OUTER);
+    const floor = new THREE.Mesh(floorGeo, BOX_MAT);
     floor.position.y = WALL_THICK / 2;
     floor.receiveShadow = true;
     group.add(floor);
     walls.push(floor);
 
-    // --- 2-5. Paredes laterales (loop: front, back, left, right) ---
-    // Cada config tiene { w, h, d } para el Box y { x, y, z } para la posición
+    // --- 2. Paredes laterales creadas secuencialmente ---
     const W = OUTER, H = WALL_HEIGHT, T = WALL_THICK;
     const halfGap = MID - T / 2;
-    const wallConfigs = [
-        { size: [W, H, T], pos: [0,     H / 2,  halfGap] }, // front
-        { size: [W, H, T], pos: [0,     H / 2, -halfGap] }, // back
-        { size: [T, H, W], pos: [-halfGap, H / 2,  0] },    // left
-        { size: [T, H, W], pos: [ halfGap, H / 2,  0] },    // right
-    ];
 
-    for (const cfg of wallConfigs) {
-        const wall = new THREE.Mesh(
-            new THREE.BoxGeometry(...cfg.size),
-            BOX_MAT
-        );
-        wall.position.set(...cfg.pos);
-        wall.castShadow = true;
-        wall.receiveShadow = true;
-        group.add(wall);
-        walls.push(wall);
-    }
+    // Pared Frontal
+    const frontWall = new THREE.Mesh(new THREE.BoxGeometry(W, H, T), BOX_MAT);
+    frontWall.position.set(0, H / 2, halfGap);
+    frontWall.castShadow = true;
+    frontWall.receiveShadow = true;
+    group.add(frontWall);
+    walls.push(frontWall);
 
-    // --- 6. Panel superior con huecos ---
+    // Pared Trasera
+    const backWall = new THREE.Mesh(new THREE.BoxGeometry(W, H, T), BOX_MAT);
+    backWall.position.set(0, H / 2, -halfGap);
+    backWall.castShadow = true;
+    backWall.receiveShadow = true;
+    group.add(backWall);
+    walls.push(backWall);
+
+    // Pared Izquierda
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(T, H, W), BOX_MAT);
+    leftWall.position.set(-halfGap, H / 2, 0);
+    leftWall.castShadow = true;
+    leftWall.receiveShadow = true;
+    group.add(leftWall);
+    walls.push(leftWall);
+
+    // Pared Derecha
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(T, H, W), BOX_MAT);
+    rightWall.position.set(halfGap, H / 2, 0);
+    rightWall.castShadow = true;
+    rightWall.receiveShadow = true;
+    group.add(rightWall);
+    walls.push(rightWall);
+
+    // --- 3. Panel superior con los 4 huecos ---
     const panel = buildTopPanel();
     group.add(panel);
 
     return { group, walls, panel };
 }
 
-// Construcción del panel superior con los 4 huecos
+// Construcción explícita del panel superior con los 4 huecos
 function buildTopPanel() {
     const shape = new THREE.Shape();
     shape.moveTo(-MID, -MID);
@@ -89,13 +91,17 @@ function buildTopPanel() {
     shape.lineTo(-MID,  MID);
     shape.closePath();
 
+    // Inyección directa y secuencial de cada hueco
     for (const cfg of HOLE_CONFIGS) {
-        const builder = HOLE_BUILDERS[cfg.shape];
-        if (!builder) {
-            console.warn(`Unknown hole shape: ${cfg.shape}`);
-            continue;
+        if (cfg.shape === 'circle') {
+            shape.holes.push(circleHole(cfg.cx, cfg.cy, cfg.hole.r));
+        } else if (cfg.shape === 'square') {
+            shape.holes.push(squareHole(cfg.cx, cfg.cy, cfg.hole.side));
+        } else if (cfg.shape === 'triangle') {
+            shape.holes.push(triangleHole(cfg.cx, cfg.cy, cfg.hole.r));
+        } else if (cfg.shape === 'rhombus') {
+            shape.holes.push(rhombusHole(cfg.cx, cfg.cy, cfg.hole.width, cfg.hole.height));
         }
-        shape.holes.push(builder(cfg));
     }
 
     const geo = new THREE.ExtrudeGeometry(shape, {
