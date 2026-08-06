@@ -49,7 +49,14 @@ try {
     const pieces = createPieces();
     scene.add(pieces);
 
-    const toyModels = createToyModels();
+    const physicsWorld = createPhysicsWorld();
+    const bodyFactory = createBodyFactory(physicsWorld.world, physicsWorld.materials);
+    const dragObstacles = [...walls];
+
+    const toyModels = createToyModels((toy) => {
+        bodyFactory.registerStatic(toy, 'wall');
+        dragObstacles.push(toy);
+    });
     scene.add(toyModels);
 
     const lights = createLights(scene);
@@ -76,17 +83,18 @@ try {
     const draggingRef = { current: false };
     const activeCameraRef = { current: cam };
 
+    let gameState;
+
     const interfaceCtrl = setupInterface({
         piecesGroup: pieces,
         buildMaterial,
         lights,
+        onEjectPiece: (label) => {
+            if (gameState) gameState.ejectPiece(label);
+        },
     });
 
-    let gameState;
     const timer = createTimer(() => gameState.showGameOver(false));
-
-    const physicsWorld = createPhysicsWorld();
-    const bodyFactory = createBodyFactory(physicsWorld.world, physicsWorld.materials);
 
     for (const child of room.children) {
         if (!child.isMesh) continue;
@@ -105,7 +113,6 @@ try {
 
     const physicsSystem = createPhysicsSystem(pieces, bodyFactory, physicsWorld);
     const rules = createClassifierRules();
-    const dragObstacles = [...walls];
 
     const orbitControls = new OrbitControls(cam, renderer.domElement);
     orbitControls.enableDamping = true;

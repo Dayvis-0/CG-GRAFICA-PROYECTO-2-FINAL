@@ -81,9 +81,30 @@ export function createGameState({
         timer.reset();
     }
 
+    function ejectPiece(targetLabel = null) {
+        let count = 0;
+        for (const child of pieces.children) {
+            if (!child.isMesh) continue;
+            const label = child.userData.label;
+            if (targetLabel && label !== targetLabel) continue;
+
+            const halfOuter = OUTER / 2;
+            const isInsideXZ = Math.abs(child.position.x) < halfOuter && Math.abs(child.position.z) < halfOuter;
+            const isInsideY = child.position.y < WALL_HEIGHT;
+
+            if ((isInsideXZ && isInsideY) || classifiedLabels.has(label)) {
+                expelPiece(child);
+                classifiedLabels.delete(label);
+                count++;
+            }
+        }
+        return count;
+    }
+
     return {
         tryClassify,
         expelPiece,
+        ejectPiece,
         processPiece,
         resetPieces,
         showGameOver,

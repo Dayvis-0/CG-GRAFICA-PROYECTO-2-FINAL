@@ -106,9 +106,16 @@ export function createBodyFactory(world, materials) {
         });
 
         mesh.updateMatrixWorld(true);
-        const wp = new THREE.Vector3();
-        mesh.getWorldPosition(wp);
-        body.position.set(wp.x, wp.y, wp.z);
+        if (shape instanceof CANNON.Box) {
+            const bbox = new THREE.Box3().setFromObject(mesh);
+            const center = new THREE.Vector3();
+            bbox.getCenter(center);
+            body.position.set(center.x, center.y, center.z);
+        } else {
+            const wp = new THREE.Vector3();
+            mesh.getWorldPosition(wp);
+            body.position.set(wp.x, wp.y, wp.z);
+        }
         
         const wq = new THREE.Quaternion();
         mesh.getWorldQuaternion(wq);

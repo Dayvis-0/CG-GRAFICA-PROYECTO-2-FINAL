@@ -45,12 +45,12 @@ export function setupCameraFPS(camera, renderer, roomBounds, obstacles = [], dra
     const target = new THREE.Vector3();
     const COLLIDE_MARGIN = 0.35;
 
-    const obstacleBoxes = obstacles.map(mesh => new THREE.Box3().setFromObject(mesh));
-
     function isBlocked(pos) {
         for (let i = 0; i < obstacles.length; i++) {
-            if (!obstacles[i].visible) continue;
-            if (isPointInsideBox(pos, obstacleBoxes[i], COLLIDE_MARGIN)) return true;
+            const obstacle = obstacles[i];
+            if (!obstacle || !obstacle.visible) continue;
+            const box = new THREE.Box3().setFromObject(obstacle);
+            if (isPointInsideBox(pos, box, COLLIDE_MARGIN)) return true;
         }
         return false;
     }

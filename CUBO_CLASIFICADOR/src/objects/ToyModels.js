@@ -3,11 +3,18 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 /**
  * Carga e instancia juguetes en la escena.
+ * @param {function(THREE.Object3D): void} [onToyLoaded] - Callback invocado por cada juguete cargado.
  * @returns {THREE.Group}
  */
-export function createToyModels() {
+export function createToyModels(onToyLoaded) {
     const group = new THREE.Group();
     const loader = new GLTFLoader();
+
+    const notifyLoaded = (obj) => {
+        if (typeof onToyLoaded === 'function') {
+            onToyLoaded(obj);
+        }
+    };
 
     // Patito de Goma
     loader.load(
@@ -19,6 +26,7 @@ export function createToyModels() {
             duck.rotation.y = Math.PI / 4;
             duck.traverse((c) => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
             group.add(duck);
+            notifyLoaded(duck);
         },
         undefined,
         (err) => console.warn('[GLTF] Error cargando Duck.glb', err)
@@ -34,6 +42,7 @@ export function createToyModels() {
             truck.rotation.y = Math.PI / 6;
             truck.traverse((c) => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
             group.add(truck);
+            notifyLoaded(truck);
         },
         undefined,
         (err) => console.warn('[GLTF] Error cargando CesiumMilkTruck.glb', err)
@@ -44,17 +53,20 @@ export function createToyModels() {
     train.position.set(-4.8, 0.2, -3.2);
     train.rotation.y = Math.PI / 3;
     group.add(train);
+    notifyLoaded(train);
 
     // Osito de Peluche
     const teddy = createTeddyBear();
     teddy.position.set(5.2, 0.45, -2.5);
     teddy.rotation.y = -Math.PI / 4;
     group.add(teddy);
+    notifyLoaded(teddy);
 
     // Pelota de Juguete
     const ball = createToyBall();
     ball.position.set(4.8, 0.45, 4.2);
     group.add(ball);
+    notifyLoaded(ball);
 
     return group;
 }

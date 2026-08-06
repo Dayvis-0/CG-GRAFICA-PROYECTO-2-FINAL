@@ -1,4 +1,4 @@
-export function setupInterface({ piecesGroup, buildMaterial, lights }) {
+export function setupInterface({ piecesGroup, buildMaterial, lights, onEjectPiece }) {
     const labelToMesh = {};
     piecesGroup.children.forEach(c => {
         if (c.isMesh) labelToMesh[c.userData.label] = c;
@@ -110,6 +110,15 @@ export function setupInterface({ piecesGroup, buildMaterial, lights }) {
     _matBtns.forEach(btn => btn.onclick = () => onStateChange('material', btn.dataset.mat));
     _texBtns.forEach(btn => btn.onclick = () => onStateChange('texture', btn.dataset.tex));
     if (_wfBtn) _wfBtn.onclick = () => onStateChange('wireframe', prev => !prev);
+
+    const ejectBtn = document.getElementById('eject-btn');
+    if (ejectBtn) {
+        ejectBtn.onclick = () => {
+            if (typeof onEjectPiece === 'function') {
+                onEjectPiece(selectedKey);
+            }
+        };
+    }
 
     document.querySelectorAll('.lighttoggle').forEach(tg => {
         tg.onclick = () => {

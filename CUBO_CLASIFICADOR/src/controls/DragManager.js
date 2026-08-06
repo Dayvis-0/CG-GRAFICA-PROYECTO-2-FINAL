@@ -26,14 +26,14 @@ export function setupDragManager(activeCameraRef, renderer, {
     let dragStartY = null;
     let enabled = true;
 
-    const obstacleBoxes = obstacles.map(m => new THREE.Box3().setFromObject(m));
-    const _candBox   = new THREE.Box3();
+    const _candBox = new THREE.Box3();
     const _cachedHalfSize = new THREE.Vector3();
 
     function overlapsClassifier(pos) {
-        if (obstacleBoxes.length === 0) return false;
+        if (obstacles.length === 0) return false;
         _candBox.min.set(pos.x - _cachedHalfSize.x, pos.y - _cachedHalfSize.y, pos.z - _cachedHalfSize.z);
         _candBox.max.set(pos.x + _cachedHalfSize.x, pos.y + _cachedHalfSize.y, pos.z + _cachedHalfSize.z);
+        const obstacleBoxes = obstacles.filter(m => m && m.visible).map(m => new THREE.Box3().setFromObject(m));
         return intersectsAnyObstacle(_candBox, obstacleBoxes);
     }
 
