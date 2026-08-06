@@ -70,21 +70,5 @@ export function createToyModels(onToyLoaded) {
         (err) => console.warn('[GLTF] Error cargando Buggy.glb', err)
     );
 
-    // Pescadito de Adorno (Esquina Noreste)
-    loader.load(
-        'src/assets/BarramundiFish.glb',
-        (gltf) => {
-            const fish = gltf.scene;
-            fish.scale.set(0.003, 0.003, 0.003);
-            fish.position.set(5.2, 0.8, -5.2);
-            fish.rotation.y = -Math.PI / 3;
-            fish.traverse((c) => { if (c.isMesh) { c.castShadow = true; c.receiveShadow = true; } });
-            group.add(fish);
-            notifyLoaded(fish);
-        },
-        undefined,
-        (err) => console.warn('[GLTF] Error cargando BarramundiFish.glb', err)
-    );
-
     return group;
 }
